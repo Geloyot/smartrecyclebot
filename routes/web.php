@@ -37,6 +37,10 @@ Route::get('/env-check', function () {
     }
 });
 
+Route::get('/view-test', function () {
+    return view('welcome'); // Test if views work
+});
+
 Route::get('/session-test', function () {
     session(['test' => 'working']);
     return 'Session: ' . session('test');
