@@ -23,22 +23,25 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::table('bins')->insert([
-            [
-                'id' => 1,
-                'name' => 'Biodegradable',
-                'type' => 'bio',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'id' => 2,
-                'name' => 'Non-Biodegradable',
-                'type' => 'non-bio',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]
-        ]);
+        // Only insert if bins table is empty
+        if (DB::table('bins')->count() === 0) {
+            DB::table('bins')->insert([
+                [
+                    'id' => 1,
+                    'name' => 'Biodegradable',
+                    'type' => 'bio',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ],
+                [
+                    'id' => 2,
+                    'name' => 'Non-Biodegradable',
+                    'type' => 'non-bio',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]
+            ]);
+        }
     }
 
     /**

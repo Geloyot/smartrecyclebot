@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
 
 return new class extends Migration
 {
@@ -40,28 +41,30 @@ return new class extends Migration
             $table->integer('last_activity')->index();
         });
 
-        DB::table('users')->insert([
-            [
-                'name' => 'John Angelo Ayson',
-                'email' => 'johnangeloayson@gmail.com',
-                'password' => password_hash('abcdefghi', PASSWORD_DEFAULT),
-                'role_id' => 2,
-                'status' => 'Active',
-                'created_at' => now(),
-                'updated_at' => now(),
-                'last_status_updated' => now()
-            ],
-            [
-                'name' => 'Nhoj Olegna Nosya',
-                'email' => 'a_ayson@yahoo.com',
-                'password' => password_hash('12345678', PASSWORD_DEFAULT),
-                'role_id' => 1,
-                'status' => 'Inactive',
-                'created_at' => now(),
-                'updated_at' => now(),
-                'last_status_updated' => now()
-            ],
-        ]);
+        if (DB::table('users')->count() === 0) {
+            DB::table('users')->insert([
+                [
+                    'name' => 'John Angelo Ayson',
+                    'email' => 'johnangeloayson@gmail.com',
+                    'password' => Hash::make('abcdefghi'),
+                    'role_id' => 2,
+                    'status' => 'Active',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                    'last_status_updated' => now()
+                ],
+                [
+                    'name' => 'Nhoj Olegna Nosya',
+                    'email' => 'a_ayson@yahoo.com',
+                    'password' => Hash::make('12345678'),
+                    'role_id' => 1,
+                    'status' => 'Inactive',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                    'last_status_updated' => now()
+                ],
+            ]);
+        }
     }
 
     /**

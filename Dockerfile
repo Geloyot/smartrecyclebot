@@ -16,5 +16,6 @@ RUN chown -R www-data:www-data /app && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8000
 
-# Just start the server
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Only run migrations (your migrations already insert data)
+CMD php artisan migrate --force && \
+    php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
