@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: smartrecyclebot
+    env: php
+    buildCommand: composer install --no-dev --optimize-autoloader && php artisan config:cache && php artisan route:cache
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
