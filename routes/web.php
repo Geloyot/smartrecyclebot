@@ -59,6 +59,18 @@ Route::get('/migrations-check', function () {
     }
 });
 
+Route::get('/login-debug', function () {
+    try {
+        return view('livewire.auth.login'); // Or wherever your login view is
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
+    }
+});
+
 /*
     PageController Routes for handling pages
 */
