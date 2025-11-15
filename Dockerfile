@@ -1,27 +1,38 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
 
+# Install system dependencies including Node.js
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libonig-dev libxml2-dev libpq-dev libzip-dev zip unzip \
+    nodejs npm \
     && docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 COPY . .
 
+# Install PHP dependencies
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
+# Install Node dependencies and build assets
+RUN npm install && npm run build
+
+# Publish Livewire assets
 RUN php artisan livewire:publish --assets
 
+# Set up storage directories
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/logs \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8000
 
-# Clear all caches including Volt
+# Clear caches, run migrations, and start server
 CMD php artisan optimize:clear && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache && \
     php artisan migrate --force && \
     php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
