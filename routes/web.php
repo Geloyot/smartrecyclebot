@@ -116,6 +116,6 @@ Route::post('/admin/user-deactivate/{id}', [DataController::class, 'userDeactiva
 /*
     Health routes for deployed version
 */
-Route::match(['get', 'head'], '/health', fn() => response()->json(['status' => 'ok']));
+Route::any('/health', fn() => 'ok');
 
 require __DIR__.'/auth.php';
