@@ -19,65 +19,13 @@ use Illuminate\Http\Request;
     Emergency deployment route check
 */
 
-// Emergency debug route
-Route::get('/test', function () {
-    return 'Laravel is working!';
-});
-
-Route::get('/env-check', function () {
-    try {
-        return response()->json([
-            'app_key' => env('APP_KEY') ? 'SET' : 'MISSING',
-            'db_connection' => env('DB_CONNECTION'),
-            'database_url' => env('DATABASE_URL') ? 'SET' : 'MISSING',
-            'can_connect_db' => DB::connection()->getPdo() ? 'YES' : 'NO',
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()]);
-    }
-});
-
-Route::get('/view-test', function () {
-    return view('welcome'); // Test if views work
-});
-
-Route::get('/session-test', function () {
+Route::get('/test-session', function () {
     session(['test' => 'working']);
-    return 'Session: ' . session('test');
+    return 'Session set. Now visit /test-session-check';
 });
 
-Route::get('/migrations-check', function () {
-    try {
-        $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
-        return response()->json([
-            'tables' => collect($tables)->pluck('tablename'),
-            'users_count' => DB::table('users')->count(),
-            'bins_count' => DB::table('bins')->count(),
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()]);
-    }
-});
-
-Route::get('/login-debug', function () {
-    try {
-        return view('livewire.auth.login'); // Or wherever your login view is
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-        ]);
-    }
-});
-
-Route::get('/livewire-check', function () {
-    return response()->json([
-        'livewire_installed' => class_exists(\Livewire\Livewire::class),
-        'volt_installed' => class_exists(\Livewire\Volt\Volt::class),
-        'login_view_exists' => view()->exists('livewire.auth.login'),
-        'volt_functional' => function_exists('Volt'),
-    ]);
+Route::get('/test-session-check', function () {
+    return session('test', 'NOT WORKING');
 });
 
 /*
