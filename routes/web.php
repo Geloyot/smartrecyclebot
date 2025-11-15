@@ -37,6 +37,24 @@ Route::get('/env-check', function () {
     }
 });
 
+Route::get('/session-test', function () {
+    session(['test' => 'working']);
+    return 'Session: ' . session('test');
+});
+
+Route::get('/migrations-check', function () {
+    try {
+        $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+        return response()->json([
+            'tables' => collect($tables)->pluck('tablename'),
+            'users_count' => DB::table('users')->count(),
+            'bins_count' => DB::table('bins')->count(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
 /*
     PageController Routes for handling pages
 */
