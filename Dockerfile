@@ -20,31 +20,27 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /app
 
-# Copy composer files first (for caching)
-COPY composer.json composer.lock ./
-
-# Copy artisan file (needed for post-install scripts)
-COPY artisan ./
-
-# Install dependencies with scripts disabled
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
-
-# Now copy the rest of the application
+# Copy application files
 COPY . .
 
-# Run post-install scripts
-RUN composer run-script post-autoload-dump
+# Install dependencies
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+# Run package discovery
+RUN php artisan package:discover --ansi
 
 # Set permissions
 RUN chown -R www-data:www-data /app \
     && chmod -R 775 storage bootstrap/cache
 
+# Cache config/routes/views at BUILD time (not runtime)
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
+
 # Expose port
 EXPOSE 8000
 
-# Production start command
-CMD php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache && \
-    php artisan migrate --force && \
+# Simple startup - just migrate and serve
+CMD php artisan migrate --force && \
     php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
