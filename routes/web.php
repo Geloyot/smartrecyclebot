@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,28 @@ use App\Http\Controllers\WasteObjectController; // adjust namespace if placed el
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+
+/*
+    Emergency deployment route check
+*/
+
+// Emergency debug route
+Route::get('/test', function () {
+    return 'Laravel is working!';
+});
+
+Route::get('/env-check', function () {
+    try {
+        return response()->json([
+            'app_key' => env('APP_KEY') ? 'SET' : 'MISSING',
+            'db_connection' => env('DB_CONNECTION'),
+            'database_url' => env('DATABASE_URL') ? 'SET' : 'MISSING',
+            'can_connect_db' => DB::connection()->getPdo() ? 'YES' : 'NO',
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
 
 /*
     PageController Routes for handling pages
