@@ -10,17 +10,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY . .
 
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts \
-    && php artisan package:discover --ansi \
-    && chown -R www-data:www-data /app \
-    && chmod -R 775 storage bootstrap/cache
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Cache everything at build time
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+RUN chown -R www-data:www-data /app && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8000
 
-# Fast startup - just migrate and serve
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Just start the server
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
