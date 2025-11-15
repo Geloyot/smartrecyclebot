@@ -10,10 +10,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY . .
 
-# Install PHP dependencies only
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Publish Livewire assets (assets already built and committed)
 RUN php artisan livewire:publish --assets
 
 RUN mkdir -p storage/framework/{sessions,views,cache} \
@@ -23,5 +21,7 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 
 EXPOSE 8000
 
-CMD php artisan migrate --force && \
+# Clear all caches including Volt
+CMD php artisan optimize:clear && \
+    php artisan migrate --force && \
     php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
