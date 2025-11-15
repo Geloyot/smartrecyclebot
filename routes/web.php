@@ -71,6 +71,15 @@ Route::get('/login-debug', function () {
     }
 });
 
+Route::get('/livewire-check', function () {
+    return response()->json([
+        'livewire_installed' => class_exists(\Livewire\Livewire::class),
+        'volt_installed' => class_exists(\Livewire\Volt\Volt::class),
+        'login_view_exists' => view()->exists('livewire.auth.login'),
+        'volt_functional' => function_exists('Volt'),
+    ]);
+});
+
 /*
     PageController Routes for handling pages
 */
