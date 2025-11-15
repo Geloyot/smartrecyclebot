@@ -13,25 +13,22 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY . .
 
-# Install PHP dependencies
+# Install dependencies
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-
-# Install Node dependencies and build assets
 RUN npm install && npm run build
 
-# Publish Livewire assets
+# Publish Livewire assets AFTER build
 RUN php artisan livewire:publish --assets
 
-# Set up storage directories
+# Set permissions
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/logs \
-    && chmod -R 775 storage bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache public
 
 EXPOSE 8000
 
-# Clear caches, run migrations, and start server
-CMD php artisan optimize:clear && \
-    php artisan config:cache && \
+# Start server
+CMD php artisan config:cache && \
     php artisan route:cache && \
     php artisan view:cache && \
     php artisan migrate --force && \
