@@ -20,14 +20,20 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /app
 
-# Copy composer files first (caching layer)
+# Copy composer files first (for caching)
 COPY composer.json composer.lock ./
 
-# Install production dependencies only
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+# Copy artisan file (needed for post-install scripts)
+COPY artisan ./
 
-# Copy application files
+# Install dependencies with scripts disabled
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+# Now copy the rest of the application
 COPY . .
+
+# Run post-install scripts
+RUN composer run-script post-autoload-dump
 
 # Set permissions
 RUN chown -R www-data:www-data /app \
@@ -36,7 +42,7 @@ RUN chown -R www-data:www-data /app \
 # Expose port
 EXPOSE 8000
 
-# Production start command (no serial_reader, no npm)
+# Production start command
 CMD php artisan config:cache && \
     php artisan route:cache && \
     php artisan view:cache && \
