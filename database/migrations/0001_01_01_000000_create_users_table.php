@@ -61,6 +61,46 @@ return new class extends Migration
                 'updated_at' => now(),
                 'last_status_updated' => now()
             ],
+            [
+                'name' => 'Administrator User',
+                'email' => 'admin_recyclebot@gmail.com',
+                'password' => password_hash('abcdefghi', PASSWORD_DEFAULT),
+                'role_id' => 2,
+                'status' => 'Active',
+                'created_at' => now(),
+                'updated_at' => now(),
+                'last_status_updated' => now()
+            ],
+            [
+                'name' => 'Maintenance User',
+                'email' => 'maintenance@yahoo.com',
+                'password' => password_hash('12345678', PASSWORD_DEFAULT),
+                'role_id' => 1,
+                'status' => 'Inactive',
+                'created_at' => now(),
+                'updated_at' => now(),
+                'last_status_updated' => now()
+            ],
+            [
+                'name' => 'Administrator User 2',
+                'email' => 'admin@gmail.com',
+                'password' => password_hash('abcdefghi', PASSWORD_DEFAULT),
+                'role_id' => 2,
+                'status' => 'Active',
+                'created_at' => now(),
+                'updated_at' => now(),
+                'last_status_updated' => now()
+            ],
+            [
+                'name' => 'Maintenance User 2',
+                'email' => 'maintenance2@yahoo.com',
+                'password' => password_hash('12345678', PASSWORD_DEFAULT),
+                'role_id' => 1,
+                'status' => 'Inactive',
+                'created_at' => now(),
+                'updated_at' => now(),
+                'last_status_updated' => now()
+            ],
         ]);
     }
 

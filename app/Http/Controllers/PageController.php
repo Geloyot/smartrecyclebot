@@ -13,7 +13,7 @@ class PageController extends Controller
 {
     public function dashboard() {
         $user = Auth::user();
-        if ($user->role_id === 2) {
+        if (Auth::check() && Auth::user()->role_id == 2) {
             return View::make('admin.dashboard');
         }
         return View::make('dashboard');

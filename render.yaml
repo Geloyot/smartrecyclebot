@@ -1,0 +1,87 @@
+services:
+  # Main Laravel Application
+  - type: web
+    name: smartrecyclebot
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        sync: false  # Add manually in Render dashboard
+      - key: APP_URL
+        value: https://smartrecyclebot-qljj.onrender.com
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: smartrecyclebot-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: smartrecyclebot-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: smartrecyclebot-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: smartrecyclebot-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: smartrecyclebot-db
+          property: password
+      - key: REVERB_SERVER_HOST
+        value: 0.0.0.0
+      - key: REVERB_SERVER_PORT
+        value: 6001
+      - key: REVERB_HOST
+        value: https://smartrecyclebot-qljj.onrender.com
+      - key: REVERB_PORT
+        value: 443
+      - key: REVERB_SCHEME
+        value: https
+      - key: VITE_REVERB_HOST
+        value: https://smartrecyclebot-qljj.onrender.com
+      - key: VITE_REVERB_PORT
+        value: 443
+      - key: VITE_REVERB_SCHEME
+        value: https
+      - key: VITE_PUSHER_HOST
+        value: https://smartrecyclebot-qljj.onrender.com
+      - key: VITE_PUSHER_PORT
+        value: 443
+      - key: VITE_PUSHER_SCHEME
+        value: https
+      - key: PYTHON_SERVICE_URL
+        value: https://smartrecyclebot-python.onrender.com
+      - key: PYTHON_SERVICE_TIMEOUT
+        value: 10
+      - key: PYTHON_SERVICE_TOKEN
+        sync: false  # Add manually
+      - key: DEVICE_API_KEY
+        sync: false  # Add manually
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: CACHE_STORE
+        value: database
+      - key: BROADCAST_CONNECTION
+        value: pusher
+      - key: PUSHER_SCHEME
+        value: https
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: info
+
+databases:
+  - name: smartrecyclebot-db
+    databaseName: recyclebot
+    user: recyclebotuser
+    plan: starter  # Free tier
