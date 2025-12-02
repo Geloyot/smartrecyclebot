@@ -4,6 +4,7 @@ services:
     name: smartrecyclebot
     env: docker
     dockerfilePath: ./Dockerfile
+    port: 8080
     envVars:
       - key: APP_ENV
         value: production
@@ -12,7 +13,7 @@ services:
       - key: APP_KEY
         sync: false  # Add manually in Render dashboard
       - key: APP_URL
-        value: https://smartrecyclebot-qljj.onrender.com
+        value: https://smartrecyclebot-b86k.onrender.com
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
@@ -40,19 +41,19 @@ services:
       - key: REVERB_SERVER_PORT
         value: 6001
       - key: REVERB_HOST
-        value: https://smartrecyclebot-qljj.onrender.com
+        value: https://smartrecyclebot-b86k.onrender.com
       - key: REVERB_PORT
         value: 443
       - key: REVERB_SCHEME
         value: https
       - key: VITE_REVERB_HOST
-        value: https://smartrecyclebot-qljj.onrender.com
+        value: https://smartrecyclebot-b86k.onrender.com
       - key: VITE_REVERB_PORT
         value: 443
       - key: VITE_REVERB_SCHEME
         value: https
       - key: VITE_PUSHER_HOST
-        value: https://smartrecyclebot-qljj.onrender.com
+        value: https://smartrecyclebot-b86k.onrender.com
       - key: VITE_PUSHER_PORT
         value: 443
       - key: VITE_PUSHER_SCHEME
