@@ -27,7 +27,7 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 
 # Copy package files and install Node dependencies
 COPY package.json package-lock.json* ./
-RUN npm ci --silent --only=production
+RUN npm ci --silent
 
 # Copy application code
 COPY . .
