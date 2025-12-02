@@ -21,7 +21,9 @@ WORKDIR /var/www
 
 # Copy dependency files
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+# Disable Laravel's auto-discovery during build to avoid .env requirement
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
 # Copy package files and install Node dependencies
 COPY package.json package-lock.json* ./
@@ -29,6 +31,9 @@ RUN npm ci --silent --only=production
 
 # Copy application code
 COPY . .
+
+# Now run Composer scripts with application code present
+RUN composer dump-autoload --optimize
 
 # Build frontend assets
 RUN npm run build
@@ -45,7 +50,7 @@ COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 # Make entrypoint executable
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose port (Render assigns PORT dynamically, but nginx listens on 8080)
+# Expose port
 EXPOSE 8080
 
 # Use entrypoint script
