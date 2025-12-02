@@ -35,8 +35,22 @@ COPY . .
 # Now run Composer scripts with application code present
 RUN composer dump-autoload --optimize
 
+# Create a temporary .env file for Vite build (will be overwritten by Render env vars at runtime)
+RUN cp .env.example .env || echo "APP_NAME='Smart Recyclebot'" > .env && \
+    echo "VITE_REVERB_APP_KEY=placeholder" >> .env && \
+    echo "VITE_REVERB_HOST=https://smartrecyclebot-b86k.onrender.com" >> .env && \
+    echo "VITE_REVERB_PORT=443" >> .env && \
+    echo "VITE_REVERB_SCHEME=https" >> .env && \
+    echo "VITE_PUSHER_APP_KEY=placeholder" >> .env && \
+    echo "VITE_PUSHER_HOST=https://smartrecyclebot-b86k.onrender.com" >> .env && \
+    echo "VITE_PUSHER_PORT=443" >> .env && \
+    echo "VITE_PUSHER_SCHEME=https" >> .env
+
 # Build frontend assets
 RUN npm run build
+
+# Remove temporary .env (Render will inject real env vars at runtime)
+RUN rm -f .env
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
