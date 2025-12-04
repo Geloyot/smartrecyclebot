@@ -133,87 +133,171 @@
 
         // Auto-wake service on page load
         async function autoWakeService() {
-            console.log('[AutoWake] Waking up detection service...');
+            console.log('[AutoWake] Attempting to wake detection service...');
 
             const wakeBtn = document.getElementById('btn-wake-service');
             const wakeStatus = document.getElementById('wake-status');
+            const startCameraBtn = document.getElementById('btn-start-browser-camera');
+
+            // Double-check elements exist
+            if (!wakeBtn || !wakeStatus) {
+                console.error('[AutoWake] Wake elements not found, retrying in 500ms...');
+                setTimeout(autoWakeService, 500);
+                return;
+            }
+
+            // Show "waking up" state during auto-wake
+            wakeBtn.disabled = true;
+            wakeBtn.textContent = 'Waking up...';
+
+            wakeStatus.textContent = 'Attempting to wake service, please wait...';
+            wakeStatus.className = 'ml-3 text-sm text-gray-600 dark:text-gray-400';
 
             try {
-                const response = await fetch('https://smartrecyclebot-python.onrender.com/health');
+                const response = await fetch('https://smartrecyclebot-python.onrender.com/health', {
+                    // Add timeout to fail faster if service is sleeping
+                    signal: AbortSignal.timeout(15000) // 15 second timeout
+                });
                 const data = await response.json();
 
                 if (data.status === 'ok') {
                     console.log('[AutoWake] ✓ Detection service ready!');
                     window.isDetectionServiceReady = true;
 
-                    // Disable wake button and show ready status
-                    if (wakeBtn) {
-                        wakeBtn.textContent = 'Service Ready ✓';
-                        wakeBtn.disabled = true;
-                        wakeBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                        wakeBtn.classList.add('bg-green-600');
+                    // Enable camera button
+                    if (startCameraBtn) {
+                        startCameraBtn.disabled = false;
                     }
 
-                    if (wakeStatus) {
-                        wakeStatus.textContent = 'Detection service is ready!';
-                        wakeStatus.className = 'ml-3 text-sm text-green-600 font-semibold';
-                    }
+                    // Show success state
+                    wakeBtn.textContent = 'Service Ready ✓';
+                    wakeBtn.disabled = true;
+                    wakeBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    wakeBtn.classList.add('bg-green-600');
+
+                    wakeStatus.textContent = 'Detection service is ready!';
+                    wakeStatus.className = 'ml-3 text-sm text-green-600 font-semibold';
                 } else {
-                    window.isDetectionServiceReady = false;
+                    // Service responded but not ready
+                    throw new Error('Service not ready');
                 }
             } catch (error) {
-                console.warn('[AutoWake] Service still waking up:', error);
+                console.warn('[AutoWake] Service not responding or still waking up:', error.name);
                 window.isDetectionServiceReady = false;
+
+                // Re-enable wake button for manual attempt
+                wakeBtn.textContent = 'Wake Up Detection Service';
+                wakeBtn.disabled = false;
+                wakeBtn.classList.remove('bg-green-600');
+                wakeBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+
+                wakeStatus.textContent = 'Service is sleeping. Click button to wake it up.';
+                wakeStatus.className = 'ml-3 text-sm text-yellow-600 dark:text-yellow-400';
             }
         }
 
-        // Wake button handler
-        document.addEventListener('DOMContentLoaded', () => {
+        // Manual wake button handler
+        async function manualWakeService() {
+            console.log('[ManualWake] Button clicked, starting manual wake...');
+
             const btn = document.getElementById('btn-wake-service');
             const status = document.getElementById('wake-status');
+            const startCameraBtn = document.getElementById('btn-start-browser-camera');
 
             if (!btn || !status) {
-                console.error('[WakeService] Wake button elements not found');
+                console.error('[ManualWake] Elements not found!');
+                alert('Error: Wake button elements not found. Please refresh the page.');
                 return;
             }
 
+            btn.disabled = true;
+            btn.textContent = 'Waking up...';
+            status.textContent = 'Please wait 30-60 seconds...';
+            status.className = 'ml-3 text-sm text-gray-600 dark:text-gray-400';
+
+            try {
+                const response = await fetch('https://smartrecyclebot-python.onrender.com/health');
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    console.log('[ManualWake] ✓ Detection service ready!');
+                    window.isDetectionServiceReady = true;
+
+                    // Enable camera button
+                    if (startCameraBtn) {
+                        startCameraBtn.disabled = false;
+                    }
+
+                    btn.textContent = 'Service Ready ✓';
+                    btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    btn.classList.add('bg-green-600');
+                    status.textContent = 'Detection service is ready! You can now start the camera.';
+                    status.className = 'ml-3 text-sm text-green-600 font-semibold';
+                    // Keep button disabled when ready
+                } else {
+                    throw new Error('Service not ready');
+                }
+            } catch (error) {
+                console.error('[ManualWake] Wake service error:', error);
+                window.isDetectionServiceReady = false;
+                btn.textContent = 'Wake Up Detection Service';
+                btn.disabled = false;
+                status.textContent = 'Failed to wake service. Try again.';
+                status.className = 'ml-3 text-sm text-red-600';
+            }
+        }
+
+        // Initialize with multiple retry attempts
+        function initializeWakeService(attempt = 1) {
+            console.log(`[WakeService] Initialization attempt ${attempt}...`);
+
+            const btn = document.getElementById('btn-wake-service');
+            const status = document.getElementById('wake-status');
+            const startCameraBtn = document.getElementById('btn-start-browser-camera');
+
+            if (!btn || !status) {
+                console.warn(`[WakeService] Elements not found on attempt ${attempt}, retrying...`);
+
+                if (attempt < 10) {
+                    // Retry up to 10 times with increasing delays
+                    setTimeout(() => initializeWakeService(attempt + 1), attempt * 100);
+                } else {
+                    console.error('[WakeService] Failed to find wake button elements after 10 attempts');
+                }
+                return;
+            }
+
+            console.log('[WakeService] Elements found, setting up...');
+
+            // Initially disable camera button until service is ready
+            if (startCameraBtn) {
+                startCameraBtn.disabled = true;
+            }
+
+            // Set up manual wake button click handler
+            btn.addEventListener('click', manualWakeService);
+            console.log('[WakeService] Click listener attached to wake button');
+
             // Try auto-wake
             autoWakeService();
+        }
 
-            btn.addEventListener('click', async function() {
-                btn.disabled = true;
-                btn.textContent = 'Waking up...';
-                status.textContent = 'Please wait 30-60 seconds...';
-                status.className = 'ml-3 text-sm text-gray-600 dark:text-gray-400';
-
-                try {
-                    const response = await fetch('https://smartrecyclebot-python.onrender.com/health');
-                    const data = await response.json();
-
-                    if (data.status === 'ok') {
-                        window.isDetectionServiceReady = true;
-
-                        // Enable camera button
-                        if (startCameraBtn) {
-                            startCameraBtn.disabled = false;
-                        }
-
-                        btn.textContent = 'Service Ready ✓';
-                        btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                        btn.classList.add('bg-green-600');
-                        status.textContent = 'Detection service is ready! You can now start the camera.';
-                        status.className = 'ml-3 text-sm text-green-600 font-semibold';
-                        // Keep button disabled when ready
-                    }
-                } catch (error) {
-                    window.isDetectionServiceReady = false;
-                    btn.textContent = 'Wake Up Detection Service';
-                    btn.disabled = false;
-                    status.textContent = 'Failed to wake service. Try again.';
-                    status.className = 'ml-3 text-sm text-red-600';
-                    console.error('Wake service error:', error);
-                }
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('[WakeService] DOM loaded, starting initialization...');
+                initializeWakeService();
             });
+        } else {
+            // DOM already loaded (e.g., Livewire navigation)
+            console.log('[WakeService] DOM already loaded, starting initialization immediately...');
+            initializeWakeService();
+        }
+
+        // Also listen for Livewire navigation events
+        document.addEventListener('livewire:navigated', () => {
+            console.log('[WakeService] Livewire navigated, reinitializing...');
+            initializeWakeService();
         });
     })();
 </script>
