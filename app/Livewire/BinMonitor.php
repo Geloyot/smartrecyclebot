@@ -31,9 +31,9 @@ class BinMonitor extends Component
             return 'Unknown';
         } elseif ($fill >= $this->fullThreshold) {
             return 'FULL';
-        } elseif ($fill >= 55 && $fill < $this->fullThreshold) {
+        } elseif ($fill >= $this->fullThreshold - 20 && $fill < $this->fullThreshold) {
             return 'NEAR FULL';
-        } elseif ($fill >= 35 && $fill < 55) {
+        } elseif ($fill >= $this->fullThreshold - 20 && $fill < $this->fullThreshold - 40) {
             return 'HALF';
         } else {
             return 'LOW';

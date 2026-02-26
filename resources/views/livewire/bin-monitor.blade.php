@@ -41,9 +41,9 @@
                 <div class="p-4 md:col-span-2
                     @if ($fill >= $fullThreshold)
                         {{ 'bg-red-200' }}
-                    @elseif ($fill >= 55 && $fill < $fullThreshold)
+                    @elseif ($fill >= $fullThreshold - 20 && $fill < $fullThreshold)
                         {{ 'bg-orange-200' }}
-                    @elseif ($fill >= 35 && $fill < 55)
+                    @elseif ($fill >= $fullThreshold - 40 && $fill < $fullThreshold - 20)
                         {{ 'bg-yellow-200' }}
                     @else
                         {{ 'bg-green-200' }}
@@ -54,9 +54,9 @@
                         <span class="text-2xl font-bold
                             @if ($fill >= $fullThreshold)
                                 {{ 'text-red-500' }}
-                            @elseif ($fill >= 55 && $fill < $fullThreshold)
+                            @elseif ($fill >= $fullThreshold - 20 && $fill < $fullThreshold)
                                 {{ 'text-orange-500' }}
-                            @elseif ($fill >= 35 && $fill < 55)
+                            @elseif ($fill >= $fullThreshold - 40 && $fill < $fullThreshold - 20)
                                 {{ 'text-yellow-400' }}
                             @else
                                 {{ 'text-green-600' }}
@@ -65,9 +65,9 @@
                         <span class="text-sm px-2 py-1 rounded
                             @if ($fill >= $fullThreshold)
                                 {{ 'bg-red-500 text-white' }}
-                            @elseif ($fill >= 55 && $fill < $fullThreshold)
+                            @elseif ($fill >= $fullThreshold - 20 && $fill < $fullThreshold)
                                 {{ 'bg-orange-500' }}
-                            @elseif ($fill >= 35 && $fill < 55)
+                            @elseif ($fill >= $fullThreshold - 40 && $fill < $fullThreshold - 20)
                                 {{ 'bg-yellow-400' }}
                             @else
                                 {{ 'bg-green-600 text-white' }}

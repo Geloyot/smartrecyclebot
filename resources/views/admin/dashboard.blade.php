@@ -9,6 +9,7 @@
     $lastUser = User::latest()->first();
 
     $fullThreshold = config('smartrecyclebot.full_bin_threshold', 80);
+    $accuracyThreshold = config('smartrecyclebot.classification_accuracy_threshold', 80);
 
     $latestBioFill = BinReading::whereHas('bin', fn($q) => $q->where('type', 'bio'))
         ->latest('created_at')
@@ -24,8 +25,8 @@
     function fillEmojiLabel($fill, $threshold) {
         if ($fill === null) return ['emoji' => '⚪', 'class' => 'text-gray-500'];
         if ($fill >= $threshold) return ['emoji' => '🔴', 'class' => 'text-red-700 dark:text-red-300'];
-        if ($fill >= 55) return ['emoji' => '🟠', 'class' => 'text-orange-700 dark:text-orange-300'];
-        if ($fill >= 35) return ['emoji' => '🟡', 'class' => 'text-yellow-700 dark:text-yellow-300'];
+        if ($fill >= $threshold - 20) return ['emoji' => '🟠', 'class' => 'text-orange-700 dark:text-orange-300'];
+        if ($fill >= $threshold - 40) return ['emoji' => '🟡', 'class' => 'text-yellow-700 dark:text-yellow-300'];
         return ['emoji' => '🟢', 'class' => 'text-green-700 dark:text-green-300'];
     }
 
@@ -34,10 +35,11 @@
 
     $score = $latestScore ?? 0;
     // thresholding for visual indicator
-    if ($score >= 0.80) {
+    $scorePercent = $score * 100;
+    if ($scorePercent >= $accuracyThreshold) {
         $emoji = '🟢';
         $labelClass = 'text-green-700 dark:text-green-300';
-    } elseif ($score >= 0.40) {
+    } elseif ($scorePercent >= $accuracyThreshold - 40) {
         $emoji = '🟡';
         $labelClass = 'text-yellow-700 dark:text-yellow-300';
     } else {
@@ -145,10 +147,11 @@
                     @php
                         $latest = $recentClassifications->first();
                         $score = $latest->score ?? 0;
-                        if ($score >= 0.80) {
+                        $scorePercent = $score * 100;
+                        if ($scorePercent >= $accuracyThreshold) {
                             $emoji = '🟢';
                             $labelClass = 'text-green-700 dark:text-green-300';
-                        } elseif ($score >= 0.40) {
+                        } elseif ($scorePercent >= $accuracyThreshold - 40) {
                             $emoji = '🟡';
                             $labelClass = 'text-yellow-700 dark:text-yellow-300';
                         } else {
@@ -193,9 +196,10 @@
                         @foreach($recentClassifications as $c)
                             @php
                                 $s = $c->score ?? 0;
-                                if ($s >= 0.80) {
+                                $at = $accuracyThreshold / 100;
+                                if ($s >= $at) {
                                     $badge = 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300';
-                                } elseif ($s >= 0.60) {
+                                } elseif ($s >= $at - 0.40) {
                                     $badge = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300';
                                 } else {
                                     $badge = 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
