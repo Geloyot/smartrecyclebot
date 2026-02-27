@@ -19,12 +19,6 @@
                 wire:navigate>
                 {{ __('Dashboard') }}
             </flux:navbar.item>
-            @if (Auth::check() && Auth::user()->role_id == 2)
-                <flux:navbar.item icon="home" :href="route('user_management')"
-                    :current="request()->routeIs('user-management')" wire:navigate>
-                    {{ __('User Management') }}
-                </flux:navbar.item>
-            @endif
             <flux:navbar.item icon="home" :href="route('bin_monitoring')"
                 :current="request()->routeIs('bin-monitoring')" wire:navigate>
                 {{ __('Bin Monitoring') }}
@@ -33,6 +27,16 @@
                 :current="request()->routeIs('classification')" wire:navigate>
                 {{ __('Classification') }}
             </flux:navbar.item>
+            @if (Auth::check() && Auth::user()->role_id == 2)
+                <flux:navbar.item icon="home" :href="route('user_management')"
+                    :current="request()->routeIs('user-management')" wire:navigate>
+                    {{ __('User Management') }}
+                </flux:navbar.item>
+                <flux:navbar.item icon="home" :href="route('control_camera')"
+                    :current="request()->routeIs('control-camera')" wire:navigate>
+                    {{ __('Camera Control Panel') }}
+                </flux:navbar.item>
+            @endif
         </flux:navbar>
 
         <flux:spacer />
@@ -99,17 +103,11 @@
         </a>
 
         <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Platform')">
+            <flux:navlist.group :heading="__('Platforms')">
                 <flux:navlist.item icon="layout-grid" :href="route('dashboard')"
                     :current="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Dashboard') }}
+                    {{ Auth::check() && Auth::user()->role_id == 2 ? __('Admin Dashboard') : __('Dashboard') }}
                 </flux:navlist.item>
-                @if (Auth::check() && Auth::user()->role_id == 2)
-                <flux:navlist.item icon="home" :href="route('user_management')"
-                    :current="request()->routeIs('user-management')" wire:navigate>
-                    {{ __('User Management') }}
-                </flux:navlist.item>
-                @endif
                 <flux:navlist.item icon="home" :href="route('bin_monitoring')"
                     :current="request()->routeIs('bin-monitoring')" wire:navigate>
                     {{ __('Bin Monitoring') }}
@@ -120,6 +118,23 @@
                 </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
+
+        @if (Auth::check() && Auth::user()->role_id == 2)
+            <flux:spacer />
+
+            <flux:navlist variant="outline">
+                <flux:navlist.group :heading="__('Admin Platforms')">
+                    <flux:navlist.item icon="home" :href="route('user_management')"
+                        :current="request()->routeIs('user-management')" wire:navigate>
+                        {{ __('User Management') }}
+                    </flux:navlist.item>
+                    <flux:navbar.item icon="home" :href="route('control_camera')"
+                        :current="request()->routeIs('control-camera')" wire:navigate>
+                        {{ __('Camera Control Panel') }}
+                    </flux:navbar.item>
+                </flux:navlist.group>
+            </flux:navlist>
+        @endif
 
         <flux:spacer />
 

@@ -35,6 +35,9 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function() {
     Route::get('/admin/user-management', [PageController::class, 'user_management'])->name('user_management');
 });
+Route::middleware(['auth'])->group(function() {
+    Route::get('/admin/control-camera', [PageController::class, 'control_camera'])->name('control_camera');
+});
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 

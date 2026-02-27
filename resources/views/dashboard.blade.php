@@ -1,10 +1,11 @@
 @php
     use App\Models\WasteObject;
     use App\Models\BinReading;
+    use App\Models\SystemThreshold;
 
     // Retrieve dynamic threshold from config
-    $fullThreshold = config('smartrecyclebot.full_bin_threshold', 80);
-    $accuracyThreshold = config('smartrecyclebot.classification_accuracy_threshold', 80);
+    $fullThreshold = SystemThreshold::getValue('full_bin_threshold', 80);
+    $accuracyThreshold = SystemThreshold::getValue('classification_accuracy_threshold', 80);
 
     $latestBioFill = BinReading::whereHas('bin', fn($q) => $q->where('type', 'bio'))
         ->latest('created_at')

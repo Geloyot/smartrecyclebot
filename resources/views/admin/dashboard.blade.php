@@ -2,14 +2,15 @@
     use App\Models\User;
     use App\Models\WasteObject;
     use App\Models\BinReading;
+    use App\Models\SystemThreshold;
 
     $totalUsers = User::count();
     $adminCount = User::where('role_id', 1)->count();
     $userCount = User::where('role_id', 2)->count();
     $lastUser = User::latest()->first();
 
-    $fullThreshold = config('smartrecyclebot.full_bin_threshold', 80);
-    $accuracyThreshold = config('smartrecyclebot.classification_accuracy_threshold', 80);
+    $fullThreshold = SystemThreshold::getValue('full_bin_threshold', 80);
+    $accuracyThreshold = SystemThreshold::getValue('classification_accuracy_threshold', 80);
 
     $latestBioFill = BinReading::whereHas('bin', fn($q) => $q->where('type', 'bio'))
         ->latest('created_at')

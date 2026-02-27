@@ -92,4 +92,15 @@ class PageController extends Controller
         ]);
     }
 
+    // MIDDLEWARE WHEN OPENING CAMERA CONTROL PANEL PAGE
+    public function control_camera(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_id !== 2) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        return view('admin.control-camera');
+    }
+
 }

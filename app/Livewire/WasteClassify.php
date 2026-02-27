@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\WasteObject;
 use Livewire\Component;
 use App\Models\Notification;
+use App\Models\SystemThreshold;
 use App\Events\NotificationCreated;
 
 class WasteClassify extends Component
@@ -16,8 +17,15 @@ class WasteClassify extends Component
 
     public function mount()
     {
-        $this->accuracyThreshold = config('smartrecyclebot.classification_accuracy_threshold', 80);
+        $this->accuracyThreshold = SystemThreshold::getValue('classification_accuracy_threshold', 80);
         $this->loadData();
+    }
+
+    public function saveThreshold()
+    {
+        SystemThreshold::setValue('classification_accuracy_threshold', $this->accuracyThreshold);
+        session()->flash('threshold_saved', "Classification accuracy threshold updated to {$this->accuracyThreshold}% successfully!");
+        $this->reevaluateClassifications();
     }
 
     public function loadData()
@@ -51,25 +59,6 @@ class WasteClassify extends Component
         } else {
             return 'LOW';
         }
-    }
-
-    /**
-     * Save accuracy threshold to config
-     */
-    public function saveThreshold()
-    {
-        $path = config_path('smartrecyclebot.php');
-        if (file_exists($path)) {
-            $config = require $path;
-            $config['classification_accuracy_threshold'] = $this->accuracyThreshold;
-
-            $export = var_export($config, true);
-            file_put_contents($path, "<?php\n\nreturn {$export};\n");
-
-            session()->flash('threshold_saved', "Classification accuracy threshold updated to {$this->accuracyThreshold}% successfully!");
-        }
-
-        $this->reevaluateClassifications();
     }
 
     /**

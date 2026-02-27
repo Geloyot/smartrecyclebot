@@ -6,6 +6,7 @@ use App\Events\NotificationCreated;
 use App\Models\Bin;
 use App\Models\BinReading;
 use App\Models\Notification;
+use App\Models\SystemThreshold;
 use Livewire\Component;
 use Illuminate\Support\Facades\Log;
 
@@ -15,8 +16,14 @@ class BinMonitor extends Component
 
     public function mount()
     {
-        // Load full threshold from config, default 80 if not set
-        $this->fullThreshold = config('smartrecyclebot.full_bin_threshold', 80);
+        $this->fullThreshold = SystemThreshold::getValue('full_bin_threshold', 80);
+    }
+
+    public function saveThreshold()
+    {
+        SystemThreshold::setValue('full_bin_threshold', $this->fullThreshold);
+        session()->flash('threshold_saved', "Full bin threshold updated to {$this->fullThreshold}% successfully!");
+        $this->reevaluateBins();
     }
 
     /**
@@ -38,32 +45,6 @@ class BinMonitor extends Component
         } else {
             return 'LOW';
         }
-    }
-
-    /**
-     * Update the full threshold dynamically.
-     *
-     * @param int $threshold
-     */
-    public function updateFullThreshold()
-    {
-        $threshold = $this->fullThreshold;
-
-        // Save to config file
-        $path = config_path('smartrecyclebot.php');
-        if (file_exists($path)) {
-            $config = require $path;
-            $config['full_bin_threshold'] = $threshold;
-
-            $export = var_export($config, true);
-            file_put_contents($path, "<?php\n\nreturn {$export};\n");
-
-            // Flash message
-            session()->flash('threshold_saved', "Full bin threshold updated to {$threshold}% successfully!");
-        }
-
-        // Re-evaluate existing bins against new threshold
-        $this->reevaluateBins();
     }
 
     public function reevaluateBins()
@@ -108,25 +89,6 @@ class BinMonitor extends Component
             $bin->last_fill_level = $fill;
             $bin->save();
         }
-    }
-
-    /**
-     * Save threshold to config and re-evaluate bins
-     */
-    public function saveThreshold()
-    {
-        $path = config_path('smartrecyclebot.php');
-        if (file_exists($path)) {
-            $config = require $path;
-            $config['full_bin_threshold'] = $this->fullThreshold;
-
-            $export = var_export($config, true);
-            file_put_contents($path, "<?php\n\nreturn {$export};\n");
-
-            session()->flash('threshold_saved', "Full bin threshold updated to {$this->fullThreshold}% successfully!");
-        }
-
-        $this->reevaluateBins();
     }
 
     public function render()
