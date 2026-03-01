@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\WasteObject;
 use App\Models\Notification;
+use App\Models\SystemThreshold;
 use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
@@ -36,15 +37,18 @@ class WebhookController extends Controller
                 'model_name' => $data['model_name'] ?? null,
             ]);
 
-            // Optional: create notification if score low or other logic
-            if (!empty($w)) {
-                // Example: notify admin if score < 0.40
-                if ($w->score !== null && $w->score < 0.40) {
+            // Create notification if score is below low threshold
+            if (!empty($w) && $w->score !== null) {
+                $accuracyThreshold = SystemThreshold::getValue('classification_accuracy_threshold', 80);
+                $lowThreshold = ($accuracyThreshold - 20) / 100; // Convert to decimal (e.g., 60% = 0.60)
+
+                if ($w->score < $lowThreshold) {
+                    $scorePercent = number_format($w->score * 100, 1);
                     Notification::create([
                         'user_id' => null,
                         'type' => 'Classification',
-                        'title' => 'Low confidence classification',
-                        'message' => "Bin {$w->bin_id}: {$w->classification} (score {$w->score})",
+                        'title' => 'Low Confidence Detection',
+                        'message' => "Classification #{$w->id} ({$w->classification}) has low confidence ({$scorePercent}%).",
                         'level' => 'warning',
                         'is_read' => false,
                     ]);

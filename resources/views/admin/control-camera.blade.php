@@ -41,6 +41,21 @@
                 <button id="btn-stop-browser-camera" class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
                     Stop Camera
                 </button>
+
+                <button id="btn-clear-logs" class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition cursor-pointer">
+                    Clear Logs
+                </button>
+            </div>
+
+            <!-- Console Log Area -->
+            <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-900 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-mono text-gray-400">Camera Detection Console</div>
+                    <div class="text-xs font-mono text-gray-500" id="log-count">0 entries</div>
+                </div>
+                <div id="console-logs" class="font-mono text-sm h-64 overflow-y-auto space-y-1 bg-black rounded p-2">
+                    <div class="text-gray-500">[System] Console initialized</div>
+                </div>
             </div>
         </div>
     </div>
@@ -54,51 +69,112 @@
     };
 </script>
 
+{{-- Console Logger Utility --}}
+<script>
+    (function() {
+        const consoleLogsDiv = document.getElementById('console-logs');
+        const logCountDiv = document.getElementById('log-count');
+        let logCount = 1; // Start at 1 because we have initial message
+
+        window.consoleLog = function(type, message) {
+            if (!consoleLogsDiv) return;
+
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'flex gap-2';
+
+            let color, prefix;
+            switch(type) {
+                case 'info':
+                    color = 'text-cyan-400';
+                    prefix = 'INFO';
+                    break;
+                case 'success':
+                    color = 'text-green-400';
+                    prefix = 'SUCCESS';
+                    break;
+                case 'warning':
+                    color = 'text-yellow-400';
+                    prefix = 'WARN';
+                    break;
+                case 'error':
+                    color = 'text-red-400';
+                    prefix = 'ERROR';
+                    break;
+                default:
+                    color = 'text-gray-400';
+                    prefix = 'LOG';
+            }
+
+            logEntry.innerHTML = `
+                <span class="text-gray-500">[${timestamp}]</span>
+                <span class="${color}">[${prefix}]</span>
+                <span class="text-gray-300">${message}</span>
+            `;
+
+            consoleLogsDiv.appendChild(logEntry);
+            consoleLogsDiv.scrollTop = consoleLogsDiv.scrollHeight;
+
+            logCount++;
+            if (logCountDiv) {
+                logCountDiv.textContent = `${logCount} entries`;
+            }
+        };
+
+        // Clear logs button
+        const clearBtn = document.getElementById('btn-clear-logs');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (consoleLogsDiv) {
+                    consoleLogsDiv.innerHTML = '<div class="text-gray-500">[System] Console cleared</div>';
+                    logCount = 1;
+                    if (logCountDiv) {
+                        logCountDiv.textContent = `${logCount} entries`;
+                    }
+                }
+            });
+        }
+    })();
+</script>
+
 {{-- Wake Service Script --}}
 <script>
     (function() {
-        // Make isServiceReady globally accessible to camera script
         window.isDetectionServiceReady = false;
 
-        // Auto-wake service on page load
         async function autoWakeService() {
-            console.log('[AutoWake] Attempting to wake detection service...');
+            consoleLog('info', 'Auto-waking detection service...');
 
             const wakeBtn = document.getElementById('btn-wake-service');
             const wakeStatus = document.getElementById('wake-status');
             const startCameraBtn = document.getElementById('btn-start-browser-camera');
 
-            // Double-check elements exist
             if (!wakeBtn || !wakeStatus) {
-                console.error('[AutoWake] Wake elements not found, retrying in 500ms...');
+                consoleLog('error', 'Wake elements not found, retrying in 500ms');
                 setTimeout(autoWakeService, 500);
                 return;
             }
 
-            // Show "waking up" state during auto-wake
             wakeBtn.disabled = true;
             wakeBtn.textContent = 'Waking up...';
-
             wakeStatus.textContent = 'Attempting to wake service, please wait...';
             wakeStatus.className = 'ml-3 text-sm text-gray-600 dark:text-gray-400';
 
             try {
+                consoleLog('info', 'Sending health check to Python service...');
                 const response = await fetch('https://smartrecyclebot-python.onrender.com/health', {
-                    // Add timeout to fail faster if service is sleeping
-                    signal: AbortSignal.timeout(15000) // 15 second timeout
+                    signal: AbortSignal.timeout(15000)
                 });
                 const data = await response.json();
 
                 if (data.status === 'ok') {
-                    console.log('[AutoWake] ✓ Detection service ready!');
+                    consoleLog('success', 'Detection service is ready!');
                     window.isDetectionServiceReady = true;
 
-                    // Enable camera button
                     if (startCameraBtn) {
                         startCameraBtn.disabled = false;
                     }
 
-                    // Show success state
                     wakeBtn.textContent = 'Service Ready ✓';
                     wakeBtn.disabled = true;
                     wakeBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
@@ -107,14 +183,12 @@
                     wakeStatus.textContent = 'Detection service is ready!';
                     wakeStatus.className = 'ml-3 text-sm text-green-600 font-semibold';
                 } else {
-                    // Service responded but not ready
                     throw new Error('Service not ready');
                 }
             } catch (error) {
-                console.warn('[AutoWake] Service not responding or still waking up:', error.name);
+                consoleLog('warning', `Service not responding: ${error.name}`);
                 window.isDetectionServiceReady = false;
 
-                // Re-enable wake button for manual attempt
                 wakeBtn.textContent = 'Wake Up Detection Service';
                 wakeBtn.disabled = false;
                 wakeBtn.classList.remove('bg-green-600');
@@ -125,16 +199,15 @@
             }
         }
 
-        // Manual wake button handler
         async function manualWakeService() {
-            console.log('[ManualWake] Button clicked, starting manual wake...');
+            consoleLog('info', 'Manual wake button clicked');
 
             const btn = document.getElementById('btn-wake-service');
             const status = document.getElementById('wake-status');
             const startCameraBtn = document.getElementById('btn-start-browser-camera');
 
             if (!btn || !status) {
-                console.error('[ManualWake] Elements not found!');
+                consoleLog('error', 'Wake button elements not found!');
                 alert('Error: Wake button elements not found. Please refresh the page.');
                 return;
             }
@@ -144,15 +217,16 @@
             status.textContent = 'Please wait 30-60 seconds...';
             status.className = 'ml-3 text-sm text-gray-600 dark:text-gray-400';
 
+            consoleLog('info', 'Waking Python service, this may take up to 60 seconds...');
+
             try {
                 const response = await fetch('https://smartrecyclebot-python.onrender.com/health');
                 const data = await response.json();
 
                 if (data.status === 'ok') {
-                    console.log('[ManualWake] ✓ Detection service ready!');
+                    consoleLog('success', 'Detection service woken up successfully!');
                     window.isDetectionServiceReady = true;
 
-                    // Enable camera button
                     if (startCameraBtn) {
                         startCameraBtn.disabled = false;
                     }
@@ -162,12 +236,11 @@
                     btn.classList.add('bg-green-600');
                     status.textContent = 'Detection service is ready! You can now start the camera.';
                     status.className = 'ml-3 text-sm text-green-600 font-semibold';
-                    // Keep button disabled when ready
                 } else {
                     throw new Error('Service not ready');
                 }
             } catch (error) {
-                console.error('[ManualWake] Wake service error:', error);
+                consoleLog('error', `Failed to wake service: ${error.message}`);
                 window.isDetectionServiceReady = false;
                 btn.textContent = 'Wake Up Detection Service';
                 btn.disabled = false;
@@ -176,56 +249,37 @@
             }
         }
 
-        // Initialize with multiple retry attempts
         function initializeWakeService(attempt = 1) {
-            console.log(`[WakeService] Initialization attempt ${attempt}...`);
-
             const btn = document.getElementById('btn-wake-service');
             const status = document.getElementById('wake-status');
             const startCameraBtn = document.getElementById('btn-start-browser-camera');
 
             if (!btn || !status) {
-                console.warn(`[WakeService] Elements not found on attempt ${attempt}, retrying...`);
-
                 if (attempt < 10) {
-                    // Retry up to 10 times with increasing delays
                     setTimeout(() => initializeWakeService(attempt + 1), attempt * 100);
                 } else {
-                    console.error('[WakeService] Failed to find wake button elements after 10 attempts');
+                    consoleLog('error', 'Failed to find wake button elements after 10 attempts');
                 }
                 return;
             }
 
-            console.log('[WakeService] Elements found, setting up...');
-
-            // Initially disable camera button until service is ready
             if (startCameraBtn) {
                 startCameraBtn.disabled = true;
             }
 
-            // Set up manual wake button click handler
             btn.addEventListener('click', manualWakeService);
-            console.log('[WakeService] Click listener attached to wake button');
-
-            // Try auto-wake
             autoWakeService();
         }
 
-        // Start initialization when DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                console.log('[WakeService] DOM loaded, starting initialization...');
                 initializeWakeService();
             });
         } else {
-            // DOM already loaded (e.g., Livewire navigation)
-            console.log('[WakeService] DOM already loaded, starting initialization immediately...');
             initializeWakeService();
         }
 
-        // Also listen for Livewire navigation events
         document.addEventListener('livewire:navigated', () => {
-            console.log('[WakeService] Livewire navigated, reinitializing...');
             initializeWakeService();
         });
     })();
@@ -248,7 +302,7 @@
         const resultDiv = document.getElementById('browser-detection-result');
 
         if (!browserVideoElement || !browserCanvas || !startBrowserBtn) {
-            console.log('[BrowserCamera] Camera elements not found');
+            consoleLog('error', 'Camera elements not found');
             return;
         }
 
@@ -265,7 +319,7 @@
                         : 'text-neutral-700 dark:text-neutral-300'
                 }`;
             }
-            console.log('[BrowserCamera] ' + message);
+            consoleLog(isError ? 'error' : 'info', message);
         }
 
         function getErrorGuidance(err) {
@@ -300,7 +354,7 @@
                     return permission.state;
                 }
             } catch (err) {
-                console.warn('Could not check camera permission:', err);
+                consoleLog('warning', 'Could not check camera permission');
             }
             return null;
         }
@@ -309,7 +363,7 @@
             if (browserVideoStream) {
                 browserVideoStream.getTracks().forEach(track => {
                     track.stop();
-                    console.log('[BrowserCamera] Stopped track:', track.kind);
+                    consoleLog('info', `Stopped ${track.kind} track`);
                 });
                 browserVideoStream = null;
                 browserVideoElement.srcObject = null;
@@ -330,6 +384,8 @@
                     alert('No camera found. Check that your device has a camera and try again.');
                     return;
                 }
+
+                consoleLog('info', `Found ${videoDevices.length} camera(s)`);
 
                 const permState = await checkCameraPermission();
                 if (permState === 'denied') {
@@ -353,12 +409,12 @@
                     try {
                         gotStream = await navigator.mediaDevices.getUserMedia(c);
                         if (gotStream) {
-                            console.log('[BrowserCamera] Successfully got stream with constraints:', c);
+                            consoleLog('success', 'Got camera stream successfully');
                             break;
                         }
                     } catch (err) {
                         lastErr = err;
-                        console.warn('[BrowserCamera] getUserMedia attempt failed for constraints', c, err);
+                        consoleLog('warning', `getUserMedia attempt failed: ${err.name}`);
                     }
                 }
 
@@ -389,7 +445,7 @@
                 try {
                     await browserVideoElement.play();
                 } catch (playErr) {
-                    console.warn('[BrowserCamera] video.play() failed:', playErr);
+                    consoleLog('warning', `video.play() failed: ${playErr.name}`);
                     if (playErr.name === 'NotAllowedError') {
                         updateBrowserStatus('Click the video to enable playback', true);
                         browserVideoElement.addEventListener('click', () => browserVideoElement.play(), { once: true });
@@ -400,6 +456,7 @@
                 if (stopBrowserBtn) stopBrowserBtn.disabled = false;
                 isBrowserCapturing = true;
                 updateBrowserStatus('Camera started - Detecting objects every 10 seconds...');
+                consoleLog('success', 'Camera started, detection interval: 10 seconds');
 
                 if (!browserVideoElement.videoWidth || !browserVideoElement.videoHeight) {
                     await new Promise(r => setTimeout(r, 300));
@@ -417,10 +474,12 @@
 
         function startBrowserFrameCapture() {
             if (!browserVideoElement.videoWidth || !browserVideoElement.videoHeight) {
-                console.warn('[BrowserCamera] Video dimensions not ready yet, delaying capture...');
+                consoleLog('warning', 'Video dimensions not ready, delaying capture');
                 setTimeout(startBrowserFrameCapture, 300);
                 return;
             }
+
+            consoleLog('info', `Starting frame capture (${browserVideoElement.videoWidth}x${browserVideoElement.videoHeight})`);
 
             browserCaptureInterval = setInterval(async () => {
                 if (!isBrowserCapturing || !browserVideoStream) return;
@@ -434,6 +493,7 @@
                         if (!blob || !isBrowserCapturing) return;
 
                         updateBrowserStatus('Sending to Python service...');
+                        consoleLog('info', 'Captured frame, sending to Python service');
 
                         try {
                             const formData = new FormData();
@@ -446,7 +506,7 @@
 
                             for (let i = 0; i < retries; i++) {
                                 if (!isBrowserCapturing) {
-                                    console.log('[BrowserCamera] Detection cancelled by user');
+                                    consoleLog('warning', 'Detection cancelled by user');
                                     updateBrowserStatus('Detection cancelled');
                                     return;
                                 }
@@ -463,18 +523,20 @@
                                     if (pythonResponse.ok) break;
 
                                     if (pythonResponse.status === 503 && i < retries - 1) {
+                                        consoleLog('warning', 'Service is waking up, waiting 5 seconds...');
                                         updateBrowserStatus('Service is waking up, please wait...');
                                         await new Promise(r => setTimeout(r, 5000));
                                         continue;
                                     }
                                 } catch (err) {
                                     if (err.name === 'AbortError') {
-                                        console.log('[BrowserCamera] Fetch aborted by user');
+                                        consoleLog('warning', 'Fetch aborted by user');
                                         updateBrowserStatus('Request cancelled');
                                         return;
                                     }
 
                                     if (i < retries - 1) {
+                                        consoleLog('warning', `Connection failed, retrying in 3 seconds... (${i+1}/${retries})`);
                                         updateBrowserStatus('Connection failed, retrying...');
                                         await new Promise(r => setTimeout(r, 3000));
                                         continue;
@@ -484,23 +546,23 @@
                             }
 
                             if (!isBrowserCapturing) {
-                                console.log('[BrowserCamera] Detection cancelled after response');
+                                consoleLog('warning', 'Detection cancelled after response');
                                 return;
                             }
 
                             if (!pythonResponse.ok) {
                                 const errorText = await pythonResponse.text();
-                                console.error('[BrowserCamera] Python service error:', pythonResponse.status, errorText);
+                                consoleLog('error', `Python service error: ${pythonResponse.status}`);
                                 updateBrowserStatus('Python service error: ' + pythonResponse.status, true);
-                                // DON'T disable stop button on error - user needs to be able to stop
                                 return;
                             }
 
                             const detectionResult = await pythonResponse.json();
-                            console.log('[BrowserCamera] Detection result:', detectionResult);
+                            consoleLog('info', `Received detection result: ${detectionResult.detections?.length || 0} objects`);
 
                             const detections = detectionResult.detections || [];
                             if (detections.length === 0) {
+                                consoleLog('info', 'No objects detected, waiting for next frame');
                                 updateBrowserStatus('No objects detected, waiting for next frame...');
                                 return;
                             }
@@ -512,11 +574,11 @@
                             const classification = bestDetection.class_name || 'Unknown';
                             const score = bestDetection.conf || 0;
 
-                            console.log('[BrowserCamera] Best detection:', classification, score);
+                            consoleLog('success', `Detected: ${classification} (${(score * 100).toFixed(1)}% confidence)`);
                             updateBrowserStatus('Posting result to Laravel...');
 
                             if (!isBrowserCapturing) {
-                                console.log('[BrowserCamera] Detection cancelled before Laravel');
+                                consoleLog('warning', 'Detection cancelled before Laravel');
                                 return;
                             }
 
@@ -533,11 +595,11 @@
                                     model_name: 'yolov8',
                                     captured_at: new Date().toISOString()
                                 }),
-                                signal: currentAbortController.signal
+                                signal: currentAbortController ? currentAbortController.signal : undefined
                             });
 
                             if (!isBrowserCapturing) {
-                                console.log('[BrowserCamera] Detection cancelled before Laravel response');
+                                consoleLog('warning', 'Detection cancelled before Laravel response');
                                 return;
                             }
 
@@ -546,18 +608,17 @@
                                 laravelResponseText = await laravelResponse.text();
                             } catch (err) {
                                 if (err.name === 'AbortError') {
-                                    console.log('[BrowserCamera] Laravel request aborted');
+                                    consoleLog('warning', 'Laravel request aborted');
                                     return;
                                 }
-                                console.error('[BrowserCamera] Failed to read Laravel response:', err);
+                                consoleLog('error', 'Failed to read Laravel response');
                                 updateBrowserStatus('Failed to read Laravel response', true);
                                 return;
                             }
 
                             if (!laravelResponse.ok) {
+                                consoleLog('error', `Laravel error: ${laravelResponse.status}`);
                                 updateBrowserStatus('Laravel error: ' + (laravelResponseText || laravelResponse.statusText), true);
-                                console.error('[BrowserCamera] Laravel error', laravelResponse.status, laravelResponseText);
-                                // DON'T disable stop button on error
                                 return;
                             }
 
@@ -565,12 +626,13 @@
                             try {
                                 laravelResult = JSON.parse(laravelResponseText);
                             } catch (parseErr) {
-                                console.error('[BrowserCamera] Laravel JSON parse error:', laravelResponseText);
+                                consoleLog('error', 'Invalid Laravel response (JSON parse error)');
                                 updateBrowserStatus('Invalid Laravel response', true);
                                 return;
                             }
 
                             if (laravelResult.success) {
+                                consoleLog('success', 'Detection saved to database successfully');
                                 displayBrowserResult({ classification: classification, score: score });
                                 updateBrowserStatus('Detection saved - Waiting 10s for next frame...');
 
@@ -578,61 +640,55 @@
                                     Livewire.dispatch('$refresh');
                                 }
                             } else {
+                                consoleLog('error', `Laravel failed: ${laravelResult.message || 'Unknown error'}`);
                                 updateBrowserStatus('Laravel failed: ' + (laravelResult.message || 'Unknown error'), true);
-                                console.error('[BrowserCamera] Laravel result:', laravelResult);
                             }
 
                         } catch (error) {
                             if (error.name === 'AbortError') {
-                                console.log('[BrowserCamera] Detection aborted by user');
+                                consoleLog('warning', 'Detection aborted by user');
                                 updateBrowserStatus('Detection cancelled');
                                 return;
                             }
-                            console.error('[BrowserCamera] Detection pipeline error:', error);
+                            consoleLog('error', `Detection pipeline error: ${error.message}`);
                             updateBrowserStatus('Detection error: ' + error.message, true);
-                            // DON'T disable stop button on error - user should still be able to stop
                         } finally {
                             currentAbortController = null;
                         }
                     }, 'image/jpeg', 0.85);
 
                 } catch (error) {
-                    console.error('[BrowserCamera] Frame capture error:', error);
+                    consoleLog('error', `Frame capture error: ${error.message}`);
                     updateBrowserStatus('Frame capture error: ' + error.message, true);
                 }
 
-            }, 10000); // 10 seconds between detections
+            }, 10000);
         }
 
         function stopBrowserCamera() {
-            console.log('[BrowserCamera] Stopping camera...');
+            consoleLog('info', 'Stopping camera...');
 
-            // CRITICAL: Set flag first to stop all async operations
             isBrowserCapturing = false;
 
-            // Abort any ongoing fetch requests
             if (currentAbortController) {
                 currentAbortController.abort();
                 currentAbortController = null;
-                console.log('[BrowserCamera] Aborted ongoing requests');
+                consoleLog('info', 'Aborted ongoing requests');
             }
 
-            // Clear interval to stop frame captures
             if (browserCaptureInterval) {
                 clearInterval(browserCaptureInterval);
                 browserCaptureInterval = null;
-                console.log('[BrowserCamera] Cleared capture interval');
+                consoleLog('info', 'Cleared capture interval');
             }
 
-            // Stop and cleanup video stream
             cleanupExistingStream();
 
-            // Reset UI state
             startBrowserBtn.disabled = false;
             if (stopBrowserBtn) stopBrowserBtn.disabled = true;
 
             updateBrowserStatus('Camera stopped - Ready to start again');
-            console.log('[BrowserCamera] Camera fully stopped');
+            consoleLog('success', 'Camera fully stopped');
         }
 
         function displayBrowserResult(data) {
@@ -659,19 +715,17 @@
             }
         }
 
-        // Event listeners
         startBrowserBtn.addEventListener('click', startBrowserCamera);
         if (stopBrowserBtn) {
             stopBrowserBtn.addEventListener('click', stopBrowserCamera);
         }
 
-        // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             if (isBrowserCapturing) {
                 stopBrowserCamera();
             }
         });
 
-        console.log('[BrowserCamera] Initialized successfully');
+        consoleLog('success', 'Browser camera initialized successfully');
     })();
 </script>
