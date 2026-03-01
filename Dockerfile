@@ -23,7 +23,7 @@ WORKDIR /var/www
 COPY composer.json composer.lock ./
 
 # Install MQTT library
-RUN composer require php-mqtt/client: --no-interaction --no-scripts
+RUN composer require php-mqtt/client --no-interaction --no-scripts
 
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
