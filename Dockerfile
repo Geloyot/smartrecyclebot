@@ -22,7 +22,9 @@ WORKDIR /var/www
 # Copy dependency files
 COPY composer.json composer.lock ./
 
-# Disable Laravel's auto-discovery during build to avoid .env requirement
+# Install MQTT library
+RUN composer require php-mqtt/client: --no-interaction --no-scripts
+
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
 # Copy package files and install Node dependencies
