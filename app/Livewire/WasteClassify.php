@@ -36,8 +36,8 @@ class WasteClassify extends Component
 
         $this->stats = [
             'total_today' => WasteObject::where('created_at', '>=', $today)->count(),
-            'biodegradable' => WasteObject::where('classification', 'ILIKE', 'Biodegradable')->count(),
-            'non_biodegradable' => WasteObject::where('classification', 'ILIKE', 'Non-Biodegradable')->count(),
+            'biodegradable' => WasteObject::where('classification', 'biodegradable')->count(),
+            'non_biodegradable' => WasteObject::where('classification', 'non-biodegradable')->count(),
         ];
     }
 
