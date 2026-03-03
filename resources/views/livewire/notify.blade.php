@@ -22,7 +22,7 @@
                         <a href="{{ route('notifications_export.csv') }}" class="mx-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
                             Export Notifications to CSV
                         </a>
-                        <button wire:click="markAllRead" class="px-3 text-sm text-blue-600 hover:underline dark:text-blue-400">
+                        <button wire:click="markAllRead" class="px-3 text-sm text-blue-600 hover:underline dark:text-blue-400 cursor-pointer">
                             Mark All Notifications as Read
                         </button>
                     </div>
@@ -56,7 +56,7 @@
                                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">{{ $notif->created_at->diffForHumans() }}</td>
                                 <td class="px-4 py-2 text-right">
                                     @if (! $notif->is_read)
-                                        <button wire:click="markRead({{ $notif->id }})" class="text-xs text-blue-600 hover:underline">
+                                        <button wire:click="markRead({{ $notif->id }})" class="text-xs text-blue-600 hover:underline cursor-pointer">
                                             Mark as Read
                                         </button>
                                     @endif

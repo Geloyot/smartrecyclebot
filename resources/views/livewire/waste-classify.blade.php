@@ -78,7 +78,7 @@
                                 $status = $this->determineConfidenceStatus($waste->score);
                                 $scorePercent = $waste->score * 100;
                             @endphp
-                            <tr class="hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer transition-all duration-200 hover:shadow-md" onclick="window.location='{{ route('classification', $waste->id) }}'">
+                            <tr class="hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer transition-all duration-200 hover:shadow-md" onclick="window.location='{{ route('classifications.show', $waste->id) }}'">
                                 <td class="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $loop->iteration }}</td>
                                 <td class="px-4 py-2 text-sm font-semibold {{ $waste->classification === 'Biodegradable' ? 'text-green-600 dark:text-green-400' : 'text-cyan-600 dark:text-cyan-400' }}">
                                     {{ $waste->classification }}
@@ -109,30 +109,34 @@
             </div>
         </div>
         {{-- Confidence Status Legend --}}
-        <div class="p-4 bg-indigo-50 dark:bg-gray-900 shadow rounded-xl mt-6">
-            <h2 class="text-lg font-semibold mb-3">Confidence Status Legend</h2>
-            <table class="min-w-full text-sm text-left">
-                <tbody>
-                    <tr>
-                        <td class="py-2.5">
-                            <span class="text-md text-white px-2 py-1 rounded bg-green-600">HIGH</span>
-                            <span class="text-md pl-2">Score ≥ {{ $accuracyThreshold }}% (High confidence detection)</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="py-2.5">
-                            <span class="text-md px-2 py-1 rounded bg-yellow-400">MEDIUM</span>
-                            <span class="text-md pl-2">Score 60-{{ $accuracyThreshold - 20 }}% (Moderate confidence)</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="py-2.5">
-                            <span class="text-md text-white px-2 py-1 rounded bg-red-600">LOW</span>
-                            <span class="text-md pl-2">Score &lt; {{ $accuracyThreshold - 20 }}% (Low confidence, requires review)</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 bg-yellow-50 shadow dark:border-neutral-700 dark:bg-neutral-900">
+            <div class="p-4 text-lg font-semibold text-gray-800 dark:text-white">
+                Confidence Status Legend
+            </div>
+            <div class="overflow-x-auto px-4 pb-4">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                    <tbody>
+                        <tr>
+                            <td class="py-2.5">
+                                <span class="text-md text-white px-2 py-1 rounded bg-green-600">HIGH</span>
+                                <span class="text-md pl-2">Score ≥ {{ $accuracyThreshold }}% (High confidence detection)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5">
+                                <span class="text-md px-2 py-1 rounded bg-yellow-400">MEDIUM</span>
+                                <span class="text-md pl-2">Score 60-{{ $accuracyThreshold - 20 }}% (Moderate confidence)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5">
+                                <span class="text-md text-white px-2 py-1 rounded bg-red-600">LOW</span>
+                                <span class="text-md pl-2">Score &lt; {{ $accuracyThreshold - 20 }}% (Low confidence, requires review)</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

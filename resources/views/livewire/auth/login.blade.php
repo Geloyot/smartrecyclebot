@@ -161,3 +161,37 @@ new #[Layout('components.layouts.auth')] class extends Component {
         </div>
     @endif
 </div>
+
+{{-- Auto-wake Python service on login page --}}
+<script>
+    (function() {
+        // Silent background wake of Python service
+        async function silentWakeService() {
+            try {
+                console.log('[LoginPage] Attempting to wake Python detection service...');
+
+                const response = await fetch('https://smartrecyclebot-python.onrender.com/health', {
+                    signal: AbortSignal.timeout(15000)
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    console.log('[LoginPage] ✓ Python service is ready');
+                } else {
+                    console.log('[LoginPage] Python service responded but not ready');
+                }
+            } catch (error) {
+                console.log('[LoginPage] Python service is sleeping or unavailable:', error.name);
+                // Silent failure - service will wake when actually needed
+            }
+        }
+
+        // Execute on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', silentWakeService);
+        } else {
+            silentWakeService();
+        }
+    })();
+</script>

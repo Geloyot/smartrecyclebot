@@ -178,7 +178,7 @@
                         </div>
 
                         <div class="ml-4">
-                            <a href="{{ route('classification') ?? '#' }}" class="inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium">
+                            <a href="{{ route('classifications') ?? '#' }}" class="inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium">
                                 Review
                             </a>
                         </div>
@@ -232,7 +232,7 @@
                                         {{ optional($c->created_at)->diffForHumans() }}
                                     </span>
 
-                                    <a href="{{ route('classifications.show', $c->id) ?? route('classification') }}" class="text-xs text-indigo-600 dark:text-indigo-300 hover:underline ml-2">
+                                    <a href="{{ route('classifications.show', $c->id) ?? route('classifications') }}" class="text-xs text-indigo-600 dark:text-indigo-300 hover:underline ml-2">
                                         View
                                     </a>
                                 </div>
@@ -255,4 +255,40 @@
             </div>
         </div>
     </div>
+
+
+
+    {{-- Auto-wake Python service on dashboard page --}}
+    <script>
+        (function() {
+            // Silent background wake of Python service
+            async function silentWakeService() {
+                try {
+                    console.log('[Dashboard] Attempting to wake Python detection service...');
+
+                    const response = await fetch('https://smartrecyclebot-python.onrender.com/health', {
+                        signal: AbortSignal.timeout(15000)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.status === 'ok') {
+                        console.log('[Dashboard] ✓ Python service is ready');
+                    } else {
+                        console.log('[Dashboard] Python service responded but not ready');
+                    }
+                } catch (error) {
+                    console.log('[Dashboard] Python service is sleeping or unavailable:', error.name);
+                    // Silent failure - service will wake when actually needed
+                }
+            }
+
+            // Execute on page load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', silentWakeService);
+            } else {
+                silentWakeService();
+            }
+        })();
+    </script>
 </x-layouts.app>

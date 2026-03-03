@@ -157,7 +157,7 @@
                                                 class="cursor-pointer bg-blue-500 text-white px-3 py-1 rounded text-sm underline hover:bg-blue-800">Edit</button>
                                             <button data-modal-target="userDeactivate-{{ $user->id }}" id="openUserModal"
                                                 href="/components/user-deactivate-box"
-                                                class="cursor-pointer {{ $user->status == 'Deactivated' ? 'bg-yellow-300 hover:bg-yellow-500 text-black' : 'bg-red-600 hover:bg-red-800 text-white'}} px-3 py-1 rounded text-sm underline">{{ $user->status == 'Deactivated' ? 'Activate' : 'Deactivate'}}</button>
+                                                class="cursor-pointer {{ $user->status == 'Deactivated' ? 'bg-yellow-300 hover:bg-yellow-500 text-black' : 'bg-red-600 hover:bg-red-800 text-white'}} px-3 py-1 rounded text-sm underline cursor-pointer">{{ $user->status == 'Deactivated' ? 'Activate' : 'Deactivate'}}</button>
                                         @endif
                                     </div>
                                 </td>

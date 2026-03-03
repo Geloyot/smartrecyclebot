@@ -23,8 +23,8 @@
                 :current="request()->routeIs('bin-monitoring')" wire:navigate>
                 {{ __('Bin Monitoring') }}
             </flux:navbar.item>
-            <flux:navbar.item icon="home" :href="route('classification')"
-                :current="request()->routeIs('classification')" wire:navigate>
+            <flux:navbar.item icon="home" :href="route('classifications')"
+                :current="request()->routeIs('classifications')" wire:navigate>
                 {{ __('Classification') }}
             </flux:navbar.item>
             @if (Auth::check() && Auth::user()->role_id == 2)
@@ -32,9 +32,9 @@
                     :current="request()->routeIs('user-management')" wire:navigate>
                     {{ __('User Management') }}
                 </flux:navbar.item>
-                <flux:navbar.item icon="home" :href="route('control_camera')"
-                    :current="request()->routeIs('control-camera')" wire:navigate>
-                    {{ __('Camera Control Panel') }}
+                <flux:navbar.item icon="home" :href="route('preview_camera')"
+                    :current="request()->routeIs('preview-camera')" wire:navigate>
+                    {{ __('Camera Preview') }}
                 </flux:navbar.item>
             @endif
         </flux:navbar>
@@ -112,8 +112,8 @@
                     :current="request()->routeIs('bin-monitoring')" wire:navigate>
                     {{ __('Bin Monitoring') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('classification')"
-                    :current="request()->routeIs('classification')" wire:navigate>
+                <flux:navlist.item icon="home" :href="route('classifications')"
+                    :current="request()->routeIs('classifications')" wire:navigate>
                     {{ __('Classification') }}
                 </flux:navlist.item>
             </flux:navlist.group>
@@ -128,9 +128,9 @@
                         :current="request()->routeIs('user-management')" wire:navigate>
                         {{ __('User Management') }}
                     </flux:navlist.item>
-                    <flux:navbar.item icon="home" :href="route('control_camera')"
-                        :current="request()->routeIs('control-camera')" wire:navigate>
-                        {{ __('Camera Control Panel') }}
+                    <flux:navbar.item icon="home" :href="route('camera_preview')"
+                        :current="request()->routeIs('camera-preview)" wire:navigate>
+                        {{ __('Camera Preview') }}
                     </flux:navbar.item>
                 </flux:navlist.group>
             </flux:navlist>

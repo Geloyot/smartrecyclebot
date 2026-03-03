@@ -27,7 +27,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/bin-monitoring', [PageController::class, 'bin_monitoring'])->name('bin_monitoring');
 });
 Route::middleware(['auth'])->group(function () {
-    Route::get('/classification', [PageController::class, 'classification'])->name('classification');
+    Route::get('/classifications', [PageController::class, 'classifications'])->name('classifications');
 });
 Route::middleware(['auth'])->group(function () {
     Route::get('/notifications', [PageController::class, 'notifications'])->name('notifications');
@@ -36,7 +36,7 @@ Route::middleware(['auth'])->group(function() {
     Route::get('/admin/user-management', [PageController::class, 'user_management'])->name('user_management');
 });
 Route::middleware(['auth'])->group(function() {
-    Route::get('/admin/control-camera', [PageController::class, 'control_camera'])->name('control_camera');
+    Route::get('/admin/camera-preview', [PageController::class, 'camera_preview'])->name('camera_preview');
 });
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');

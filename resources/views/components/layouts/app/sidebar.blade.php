@@ -15,7 +15,7 @@
                 <flux:navlist.group :heading="__('Platforms')" class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ Auth::check() && Auth::user()->role_id == 2 ? __('Admin Dashboard') : __('Dashboard') }}</flux:navlist.item>
                     <flux:navlist.item icon="home" :href="route('bin_monitoring')" :current="request()->routeIs('bin-monitoring')" wire:navigate>{{ __('Bin Monitoring')}}</flux:navlist.item>
-                    <flux:navlist.item icon="home" :href="route('classification')" :current="request()->routeIs('classification')" wire:navigate>{{ __('Classification')}}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('classifications')" :current="request()->routeIs('classifications')" wire:navigate>{{ __('Classification')}}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 
@@ -25,7 +25,7 @@
                 <flux:navlist variant="outline">
                     <flux:navlist.group :heading="__('Admin Platforms')" class="grid">
                         <flux:navlist.item icon="home" :href="route('user_management')" :current="request()->routeIs('user-management')" wire:navigate>{{ __('User Management')}}</flux:navlist.item>
-                        <flux:navlist.item icon="home" :href="route('control_camera')" :current="request()->routeIs('control-camera')" wire:navigate>{{ __('Camera Control Panel')}}</flux:navlist.item>
+                        <flux:navlist.item icon="home" :href="route('camera_preview')" :current="request()->routeIs('camera-preview')" wire:navigate>{{ __('Camera Preview')}}</flux:navlist.item>
                     </flux:navlist.group>
                 </flux:navlist>
             @endif

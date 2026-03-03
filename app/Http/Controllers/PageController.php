@@ -41,8 +41,8 @@ class PageController extends Controller
     }
 
     // MIDDLEWARE WHEN OPENING CLASSIFICATION PAGE
-    public function classification() {
-        return View::make('classification');
+    public function classifications() {
+        return View::make('classifications');
     }
 
     public function notifications() {
@@ -92,15 +92,15 @@ class PageController extends Controller
         ]);
     }
 
-    // MIDDLEWARE WHEN OPENING CAMERA CONTROL PANEL PAGE
-    public function control_camera(Request $request)
+    // MIDDLEWARE WHEN OPENING CAMERA PREVIEW PAGE
+    public function camera_preview(Request $request)
     {
         $user = Auth::user();
         if ($user->role_id !== 2) {
             abort(403, 'Unauthorized access.');
         }
 
-        return view('admin.control-camera');
+        return view('admin.camera-preview');
     }
 
 }

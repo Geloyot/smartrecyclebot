@@ -1,9 +1,9 @@
-<x-layouts.app :title="__('Camera Control Panel')">
+<x-layouts.app :title="__('Camera Preview')">
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <!-- Camera Controls Section -->
         <div wire:ignore class="rounded-xl border border-neutral-200 bg-yellow-50 p-4 shadow dark:border-neutral-700 dark:bg-neutral-900">
             <div class="pb-4 text-lg font-semibold text-gray-800 dark:text-white">
-                Camera Control Panel
+                Camera Preview
             </div>
 
             <!-- Video Preview -->
@@ -150,8 +150,8 @@
             const startCameraBtn = document.getElementById('btn-start-browser-camera');
 
             if (!wakeBtn || !wakeStatus) {
-                consoleLog('error', 'Wake elements not found, retrying in 500ms');
-                setTimeout(autoWakeService, 500);
+                consoleLog('error', 'Wake elements not found, retrying in 1s');
+                setTimeout(autoWakeService, 1000);
                 return;
             }
 
@@ -163,7 +163,7 @@
             try {
                 consoleLog('info', 'Sending health check to Python service...');
                 const response = await fetch('https://smartrecyclebot-python.onrender.com/health', {
-                    signal: AbortSignal.timeout(15000)
+                    signal: AbortSignal.timeout(30000)
                 });
                 const data = await response.json();
 

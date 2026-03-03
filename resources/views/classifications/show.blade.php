@@ -10,7 +10,7 @@
                 <p><strong>Description:</strong> {{ $wasteObject->description ?? 'N/A' }}</p>
             </div>
 
-            <a href="{{ route('classification') }}"
+            <a href="{{ route('classifications') }}"
                class="inline-block mt-4 text-blue-500 hover:text-blue-700">
                ← Back to Classifications
             </a>
