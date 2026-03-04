@@ -11,6 +11,10 @@ use lepiaf\SerialPort\Exception\DeviceNotFound;
 use lepiaf\SerialPort\Exception\DeviceNotAvailable;
 use lepiaf\SerialPort\Exception\DeviceNotOpened;
 
+// Configuration: Local + Production URLs
+$localUrl = 'http://localhost:8000/api/bin-reading-read';
+$productionUrl = 'https://smartrecyclebot-b86k.onrender.com/api/bin-reading-read';
+
 // 1) Candidates + Configure choice
 if (PHP_OS_FAMILY === 'Windows') {
     $candidates = [
@@ -81,13 +85,31 @@ while (true) {
         $nonbio = (float)$m[2];
         echo "Fill Level Data:\nBIO={$bio}%, NONBIO={$nonbio}%\n";
 
-        // 3. Forward to Laravel API
-        $url   = 'http://localhost:8000/api/bin-reading-read';
-        $query = http_build_query(compact('bio', 'nonbio'));
-        $resp  = @file_get_contents("{$url}?{$query}");
-        echo $resp === false
-            ? "[API] Warning: Data cannot be sent to app. Open the Laravel app for it to read the data.\n"
-            : "[API] {$resp}\n";
+    // 3. Forward to Laravel API (Local + Production)
+    $query = http_build_query(compact('bio', 'nonbio'));
+
+    // Send to LOCAL
+    echo "[LOCAL] Sending...\n";
+    $localResp = @file_get_contents("{$localUrl}?{$query}");
+    echo $localResp === false
+        ? "[LOCAL] ✗ Failed (Is Laravel running?)\n"
+        : "[LOCAL] ✓ {$localResp}\n";
+
+    // Send to PRODUCTION
+    echo "[PROD] Sending...\n";
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'timeout' => 10,
+            'ignore_errors' => true
+        ]
+    ]);
+    $prodResp = @file_get_contents("{$productionUrl}?{$query}", false, $context);
+    echo $prodResp === false
+        ? "[PROD] ✗ Failed (Check internet/Render)\n"
+        : "[PROD] ✓ {$prodResp}\n";
+
+    echo "\n";
     }
     // else: this shouldn't happen now, but you could log/uncomment for debugging
 }

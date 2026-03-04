@@ -125,7 +125,7 @@
                         <tr>
                             <td class="py-2.5">
                                 <span class="text-md px-2 py-1 rounded bg-yellow-400">MEDIUM</span>
-                                <span class="text-md pl-2">Score 60-{{ $accuracyThreshold - 20 }}% (Moderate confidence)</span>
+                                <span class="text-md pl-2">Score {{ $accuracyThreshold - 1 }}-{{ $accuracyThreshold - 20 }}% (Moderate confidence)</span>
                             </td>
                         </tr>
                         <tr>
