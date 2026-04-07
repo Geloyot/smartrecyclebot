@@ -29,23 +29,30 @@
             </div>
         @endif
         {{-- Card section row --}}
-        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
+        <div class="grid auto-rows-min gap-4 md:grid-cols-4">
             <div class="rounded-xl border border-neutral-200 bg-yellow-50 p-4 shadow dark:border-neutral-700 dark:bg-neutral-900">
-                <div class="text-sm text-gray-500 dark:text-gray-400">Total Classifications Today</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Recent Classifications</div>
                 <div class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
-                    {{ $stats['total_today'] ?? '0' }}
+                    {{ $stats['today_count'] ?? '0' }}
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-neutral-200 bg-yellow-50 p-4 shadow dark:border-neutral-700 dark:bg-neutral-900">
+                <div class="text-sm text-gray-500 dark:text-gray-400">Total Classifications</div>
+                <div class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
+                    {{ $stats['total_count'] ?? '0' }}
                 </div>
             </div>
 
             <div class="rounded-xl border border-neutral-200 bg-green-100 p-4 shadow dark:border-neutral-700 dark:bg-neutral-900">
-                <div class="text-sm text-gray-500 dark:text-gray-400">Biodegradable</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Biodegradable Objects</div>
                 <div class="mt-2 text-2xl font-semibold text-green-600 dark:text-green-400">
                     {{ $stats['biodegradable'] ?? '0' }}
                 </div>
             </div>
 
             <div class="rounded-xl border border-neutral-200 bg-blue-100 p-4 shadow dark:border-neutral-700 dark:bg-neutral-900">
-                <div class="text-sm text-gray-500 dark:text-gray-400">Non-Biodegradable</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Non-Biodegradable Objects</div>
                 <div class="mt-2 text-2xl font-semibold text-cyan-600 dark:text-cyan-400">
                     {{ $stats['non_biodegradable'] ?? '0' }}
                 </div>
