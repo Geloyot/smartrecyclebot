@@ -8,11 +8,24 @@ use App\Models\BinReading;
 use App\Models\Notification;
 use App\Models\SystemThreshold;
 use Livewire\Component;
-use Illuminate\Support\Facades\Log;
+use Livewire\WithPagination;
 
 class BinMonitor extends Component
 {
+    use WithPagination;
+
     public $fullThreshold;
+
+    // Per-table filters/sort
+    public $bioSortField      = 'created_at';
+    public $bioSortDir        = 'desc';
+    public $bioFilterStatus   = '';
+    public $bioPerPage        = 10;
+
+    public $nonbioSortField     = 'created_at';
+    public $nonbioSortDir       = 'desc';
+    public $nonbioFilterStatus  = '';
+    public $nonbioPerPage       = 10;
 
     public function mount()
     {
@@ -26,21 +39,42 @@ class BinMonitor extends Component
         $this->reevaluateBins();
     }
 
-    /**
-     * Determine the status of a bin based on its fill level.
-     *
-     * @param int|null $fill
-     * @return string
-     */
-    public function determineStatus($fill)
+    public function sortBio(string $field): void
     {
-        if ($fill === null) {
-            return 'Unknown';
-        } elseif ($fill >= $this->fullThreshold) {
+        if ($this->bioSortField === $field) {
+            $this->bioSortDir = $this->bioSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->bioSortField = $field;
+            $this->bioSortDir   = 'desc';
+        }
+        $this->resetPage('bioPage');
+    }
+
+    public function sortNonBio(string $field): void
+    {
+        if ($this->nonbioSortField === $field) {
+            $this->nonbioSortDir = $this->nonbioSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->nonbioSortField = $field;
+            $this->nonbioSortDir   = 'desc';
+        }
+        $this->resetPage('nonbioPage');
+    }
+
+    public function updatedBioFilterStatus()  { $this->resetPage('bioPage'); }
+    public function updatedBioPerPage()        { $this->resetPage('bioPage'); }
+    public function updatedNonbioFilterStatus(){ $this->resetPage('nonbioPage'); }
+    public function updatedNonbioPerPage()     { $this->resetPage('nonbioPage'); }
+
+    public function determineStatus($fill): string
+    {
+        if ($fill === null) return 'Unknown';
+
+        if ($fill >= $this->fullThreshold) {
             return 'FULL';
-        } elseif ($fill >= $this->fullThreshold - 20 && $fill < $this->fullThreshold) {
+        } elseif ($fill >= $this->fullThreshold - 20) {
             return 'NEAR FULL';
-        } elseif ($fill >= $this->fullThreshold - 20 && $fill < $this->fullThreshold - 40) {
+        } elseif ($fill >= $this->fullThreshold - 40) {
             return 'HALF';
         } else {
             return 'LOW';
@@ -59,31 +93,26 @@ class BinMonitor extends Component
 
             $status = $this->determineStatus($fill);
 
-            // Check FULL notification
-            if ($status === 'FULL' && ! $bin->notified_full) {
-                // Generate notification
+            if ($status === 'FULL' && !$bin->notified_full) {
                 $notif = Notification::create([
                     'user_id' => null,
-                    'type' => 'Bin Monitor',
-                    'title' => 'Bin is Full',
+                    'type'    => 'Bin Monitor',
+                    'title'   => 'Bin is Full',
                     'message' => "Bin #{$bin->id} ({$bin->name}) is now full ({$fill}%).",
-                    'level' => 'warning',
+                    'level'   => 'warning',
                     'is_read' => false,
                 ]);
                 event(new NotificationCreated($notif));
 
                 $bin->update([
-                    'notified_full' => true,
+                    'notified_full'     => true,
+                    'last_full_at'      => now(),
                     'last_full_fill_level' => $fill,
                 ]);
             }
 
-            // Suppress FULL if no longer above threshold
             if ($status !== 'FULL' && $bin->notified_full) {
-                $bin->update([
-                    'notified_full' => false,
-                    'last_full_fill_level' => null,
-                ]);
+                $bin->update(['notified_full' => false]);
             }
 
             $bin->last_fill_level = $fill;
@@ -91,54 +120,103 @@ class BinMonitor extends Component
         }
     }
 
+    private function buildReadingsQuery(string $binType)
+    {
+        $bin = Bin::where('type', $binType)->first();
+        if (!$bin) return null;
+
+        $sortField     = $binType === 'bio' ? $this->bioSortField     : $this->nonbioSortField;
+        $sortDir       = $binType === 'bio' ? $this->bioSortDir       : $this->nonbioSortDir;
+        $filterStatus  = $binType === 'bio' ? $this->bioFilterStatus  : $this->nonbioFilterStatus;
+        $perPage       = $binType === 'bio' ? $this->bioPerPage       : $this->nonbioPerPage;
+
+        $query = BinReading::where('bin_id', $bin->id);
+
+        if ($filterStatus) {
+            $threshold = $this->fullThreshold;
+            $low       = $threshold - 40;
+            $half      = $threshold - 20;
+
+            match ($filterStatus) {
+                'FULL'      => $query->where('fill_level', '>=', $threshold),
+                'NEAR FULL' => $query->whereBetween('fill_level', [$half, $threshold - 0.01]),
+                'HALF'      => $query->whereBetween('fill_level', [$low, $half - 0.01]),
+                'LOW'       => $query->where('fill_level', '<', $low),
+            };
+        }
+
+        return $query->orderBy($sortField, $sortDir)->paginate($perPage, ['*'], "{$binType}Page");
+    }
+
+    private function getSummary(string $binType): array
+    {
+        $bin = Bin::where('type', $binType)->first();
+        if (!$bin) return ['last_full_at' => null, 'last_emptied_at' => null, 'interval' => null];
+
+        $lastFullAt    = $bin->last_full_at;
+        $lastEmptiedAt = $bin->last_emptied_at;
+
+        $interval = null;
+        if ($lastFullAt && $lastEmptiedAt && $lastEmptiedAt->gt($lastFullAt)) {
+            $interval = $lastEmptiedAt->diffForHumans($lastFullAt, true);
+        }
+
+        return [
+            'last_full_at'    => $lastFullAt?->format('M d, Y H:i:s') ?? 'N/A',
+            'last_emptied_at' => $lastEmptiedAt?->format('M d, Y H:i:s') ?? 'N/A',
+            'interval'        => $interval ?? 'N/A',
+        ];
+    }
+
     public function render()
     {
-        $bins = Bin::with(['readings' => function ($q) {
-            $q->latest()->limit(1);
-        }])->get();
+        $bins = Bin::with(['readings' => fn($q) => $q->latest()->limit(1)])->get();
 
         $binsData = $bins->map(function ($bin) {
             $reading = $bin->readings->first();
-            $fill = $reading?->fill_level ?? null; // always defined
-            $status = $this->determineStatus($fill);
+            $fill    = $reading?->fill_level ?? null;
+            $status  = $this->determineStatus($fill);
 
-            // FULL detection
-            if ($status === 'FULL' && ! $bin->notified_full) {
+            if ($status === 'FULL' && !$bin->notified_full) {
                 $notif = Notification::create([
                     'user_id' => null,
-                    'type' => 'Bin Monitor',
-                    'title' => 'Bin is Full',
+                    'type'    => 'Bin Monitor',
+                    'title'   => 'Bin is Full',
                     'message' => "Bin #{$bin->id} ({$bin->name}) is now full ({$fill}%).",
-                    'level' => 'warning',
+                    'level'   => 'warning',
                     'is_read' => false,
                 ]);
                 event(new NotificationCreated($notif));
 
                 $bin->update([
-                    'notified_full' => true,
+                    'notified_full'        => true,
+                    'last_full_at'         => now(),
                     'last_full_fill_level' => $fill,
                 ]);
             }
 
-            // Emptied detection (≥40% drop from full)
+            // Emptied detection (≥40% drop)
             if ($bin->notified_full
                 && $bin->last_full_fill_level !== null
                 && ($bin->last_full_fill_level - ($fill ?? 0)) >= 40
+                && in_array($status, ['LOW', 'HALF'])
             ) {
-                $binLevelDrop = $bin->last_full_fill_level - ($fill ?? 0);
+                $drop  = $bin->last_full_fill_level - ($fill ?? 0);
                 $notif = Notification::create([
                     'user_id' => null,
-                    'type' => 'Bin Monitor',
-                    'title' => 'Bin Emptied',
-                    'message' => "Bin #{$bin->id} ({$bin->name}) was emptied (dropped by {$binLevelDrop}%).",
-                    'level' => 'info',
+                    'type'    => 'Bin Monitor',
+                    'title'   => 'Bin Emptied',
+                    'message' => "Bin #{$bin->id} ({$bin->name}) was emptied (dropped by {$drop}%).",
+                    'level'   => 'info',
                     'is_read' => false,
                 ]);
                 event(new NotificationCreated($notif));
 
                 $bin->update([
-                    'notified_full' => false,
-                    'last_full_fill_level' => null,
+                    'notified_full'           => false,
+                    'last_emptied_at'         => now(),
+                    'last_emptied_full_at'    => $bin->last_full_at,
+                    'last_full_fill_level'    => null,
                 ]);
             }
 
@@ -146,36 +224,25 @@ class BinMonitor extends Component
             $bin->save();
 
             return [
-                'id' => $bin->id,
-                'name' => $bin->name,
-                'type' => $bin->type,
-                'fill' => $fill ?? 0,
-                'status' => $status,
+                'id'         => $bin->id,
+                'name'       => $bin->name,
+                'type'       => $bin->type,
+                'fill'       => $fill ?? 0,
+                'status'     => $status,
                 'updated_at' => $reading?->created_at?->format('M d, Y H:i:s') ?? 'N/A',
             ];
         });
 
-        $fullBinCount = $binsData->filter(fn($bin) => $bin['status'] === 'FULL')->count();
+        $fullBinCount    = $binsData->filter(fn($b) => $b['status'] === 'FULL')->count();
+        $bioReadings     = $this->buildReadingsQuery('bio');
+        $nonbioReadings  = $this->buildReadingsQuery('non-bio');
+        $bioSummary      = $this->getSummary('bio');
+        $nonbioSummary   = $this->getSummary('non-bio');
 
-        $recentReadings = BinReading::with('bin')
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($reading) {
-                $fill = $reading?->fill_level ?? 0;
-                return [
-                    'timestamp' => $reading->created_at->format('M d, Y H:i:s'),
-                    'bin_type' => $reading->bin?->type ?? 'unknown',
-                    'fill_level' => $fill,
-                    'status' => $this->determineStatus($fill),
-                ];
-            });
-
-        return view('livewire.bin-monitor', [
-            'binsData' => $binsData,
-            'fullBinCount' => $fullBinCount,
-            'recentReadings' => $recentReadings,
-            'nextCheckTime' => now()->addMinutes(10)->format('M d, Y H:i:s'),
-        ]);
+        return view('livewire.bin-monitor', compact(
+            'binsData', 'fullBinCount',
+            'bioReadings', 'nonbioReadings',
+            'bioSummary', 'nonbioSummary'
+        ));
     }
 }

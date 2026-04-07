@@ -20,6 +20,9 @@ return new class extends Migration
             $table->boolean('notified_full')->default(false);
             $table->float('last_fill_level', 5)->nullable();
             $table->float('last_full_fill_level', 5)->nullable();
+            $table->timestamp('last_full_at')->nullable();
+            $table->timestamp('last_emptied_at')->nullable();
+            $table->timestamp('last_emptied_full_at')->nullable(); // the FULL reading before emptying
             $table->timestamps();
         });
 

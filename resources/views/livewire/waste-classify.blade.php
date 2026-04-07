@@ -1,7 +1,7 @@
 <div wire:poll.30s>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         {{-- Threshold Control Section --}}
-        <div class="grid auto-rows-min gap-4 md:grid-cols-2 mb-6">
+        <div class="grid auto-rows-min gap-4 md:grid-cols-2 mb-1">
             <div class="flex items-center gap-2 rounded-xl border border-indigo-200 dark:border-indigo-700 py-2 px-8 bg-indigo-50 dark:bg-indigo-900">
                 <h2 class="pt-1 mt-1.5 font-bold text-gray-700 dark:text-gray-300">
                     Configure Accuracy Threshold (%)
@@ -74,6 +74,37 @@
                         </button>
                     @endforeach
                 </div>
+            </div>
+        </div>
+
+        {{-- Confidence Status Legend --}}
+        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 bg-yellow-50 shadow dark:border-neutral-700 dark:bg-neutral-900">
+            <div class="mt-4 ml-4 mb-1 text-lg font-semibold text-gray-800 dark:text-white">
+                Confidence Status Legend
+            </div>
+            <div class="overflow-x-auto px-4 pb-3">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                    <tbody>
+                        <tr>
+                            <td class="py-2">
+                                <span class="text-sm text-white px-2 py-1 rounded bg-green-600">HIGH</span>
+                                <span class="text-sm pl-2">Score ≥ {{ $accuracyThreshold }}% (High confidence detection)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="py-2">
+                                <span class="text-sm px-2 py-1 rounded bg-yellow-400">MEDIUM</span>
+                                <span class="text-sm pl-2">Score {{ $accuracyThreshold - 1 }}-{{ $accuracyThreshold - 20 }}% (Moderate confidence)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="py-2">
+                                <span class="text-sm text-white px-2 py-1 rounded bg-red-600">LOW</span>
+                                <span class="text-sm pl-2">Score &lt; {{ $accuracyThreshold - 20 }}% (Low confidence, requires review)</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -176,37 +207,6 @@
 
             <div class="px-4 pb-4">
                 {{ $classifications->links() }}
-            </div>
-        </div>
-
-        {{-- Confidence Status Legend --}}
-        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 bg-yellow-50 shadow dark:border-neutral-700 dark:bg-neutral-900">
-            <div class="p-4 text-lg font-semibold text-gray-800 dark:text-white">
-                Confidence Status Legend
-            </div>
-            <div class="overflow-x-auto px-4 pb-4">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                    <tbody>
-                        <tr>
-                            <td class="py-2.5">
-                                <span class="text-md text-white px-2 py-1 rounded bg-green-600">HIGH</span>
-                                <span class="text-md pl-2">Score ≥ {{ $accuracyThreshold }}% (High confidence detection)</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="py-2.5">
-                                <span class="text-md px-2 py-1 rounded bg-yellow-400">MEDIUM</span>
-                                <span class="text-md pl-2">Score {{ $accuracyThreshold - 1 }}-{{ $accuracyThreshold - 20 }}% (Moderate confidence)</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="py-2.5">
-                                <span class="text-md text-white px-2 py-1 rounded bg-red-600">LOW</span>
-                                <span class="text-md pl-2">Score &lt; {{ $accuracyThreshold - 20 }}% (Low confidence, requires review)</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>

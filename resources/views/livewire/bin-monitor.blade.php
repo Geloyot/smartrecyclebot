@@ -82,12 +82,17 @@
                 </div>
             @endforeach
 
-            {{-- System Summary Card --}}
+            {{-- System Summary Cards --}}
+            @foreach (['bio' => ['label' => 'Biodegradable', 'summary' => $bioSummary], 'non-bio' => ['label' => 'Non-Biodegradable', 'summary' => $nonbioSummary]] as $type => $data)
             <div class="p-4 bg-green-50 dark:bg-gray-900 shadow rounded-xl">
-                <h2 class="text-lg font-semibold">System Summary</h2>
-                <p class="mt-2">Full bins: {{ $fullBinCount }}</p>
-                <p>Next check: {{ $nextCheckTime }}</p>
+                <h2 class="text-lg font-semibold mb-2">{{ $data['label'] }} Summary</h2>
+                <div class="text-sm space-y-1 text-gray-700 dark:text-gray-300">
+                    <p><span class="font-medium">Last Full:</span> {{ $data['summary']['last_full_at'] }}</p>
+                    <p><span class="font-medium">Last Emptied:</span> {{ $data['summary']['last_emptied_at'] }}</p>
+                    <p><span class="font-medium">Time Until Emptied:</span> {{ $data['summary']['interval'] }}</p>
+                </div>
             </div>
+            @endforeach
 
             {{-- Legend Card --}}
             <div class="md:col-span-3 p-4 bg-green-50 dark:bg-gray-900 shadow rounded-xl">
@@ -120,64 +125,100 @@
         </div>
 
         {{-- Recent Readings --}}
-        <div class="flex flex-col md:flex-row gap-6">
-            {{-- Biodegradable Bin Table --}}
-            <div class="flex-1 bg-green-50 dark:bg-gray-900 shadow rounded-xl p-4">
-                <h2 class="text-lg font-semibold mb-4">Biodegradable Bin Readings</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm text-left">
-                        <thead class="bg-green-200 dark:bg-gray-800">
-                            <tr>
-                                <th class="px-4 py-2">Timestamp</th>
-                                <th class="px-4 py-2">Fill Level</th>
-                                <th class="px-4 py-2">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse (collect($recentReadings)->where('bin_type', 'bio') as $reading)
-                                <tr class="border-b dark:border-gray-700">
-                                    <td class="px-4 py-2">{{ $reading['timestamp'] }}</td>
-                                    <td class="px-4 py-2">{{ $reading['fill_level'] }}%</td>
-                                    <td class="px-4 py-2">{{ $reading['status'] }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="px-4 py-2 text-center text-gray-500">No biodegradable readings found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+        @foreach ([
+            'bio'     => ['label' => 'Biodegradable',     'color' => 'green',  'readings' => $bioReadings,    'sortField' => $bioSortField,    'sortDir' => $bioSortDir,    'filterStatus' => $bioFilterStatus,    'perPage' => $bioPerPage,    'sortMethod' => 'sortBio',    'filterModel' => 'bioFilterStatus',    'perPageModel' => 'bioPerPage'],
+            'non-bio' => ['label' => 'Non-Biodegradable', 'color' => 'cyan',   'readings' => $nonbioReadings, 'sortField' => $nonbioSortField, 'sortDir' => $nonbioSortDir, 'filterStatus' => $nonbioFilterStatus, 'perPage' => $nonbioPerPage, 'sortMethod' => 'sortNonBio', 'filterModel' => 'nonbioFilterStatus', 'perPageModel' => 'nonbioPerPage'],
+        ] as $type => $t)
+        <div class="bg-{{ $t['color'] }}-50 dark:bg-gray-900 shadow rounded-xl p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 class="text-lg font-semibold">{{ $t['label'] }} Bin Readings</h2>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select wire:model.live="{{ $t['filterModel'] }}"
+                        class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white dark:bg-neutral-800 dark:text-gray-200 dark:border-neutral-600 focus:outline-none">
+                        <option value="">All Statuses</option>
+                        <option value="FULL">Full</option>
+                        <option value="NEAR FULL">Near Full</option>
+                        <option value="HALF">Half</option>
+                        <option value="LOW">Low</option>
+                    </select>
+                    <select wire:model.live="{{ $t['perPageModel'] }}"
+                        class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white dark:bg-neutral-800 dark:text-gray-200 dark:border-neutral-600 focus:outline-none">
+                        <option value="10">10 rows</option>
+                        <option value="25">25 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100">100 rows</option>
+                    </select>
                 </div>
             </div>
 
-            {{-- Non-Biodegradable Bin Table --}}
-            <div class="flex-1 bg-cyan-50 dark:bg-gray-900 shadow rounded-xl p-4">
-                <h2 class="text-lg font-semibold mb-4">Non-Biodegradable Bin Readings</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm text-left">
-                        <thead class="bg-cyan-200 dark:bg-gray-800">
-                            <tr>
-                                <th class="px-4 py-2">Timestamp</th>
-                                <th class="px-4 py-2">Fill Level</th>
-                                <th class="px-4 py-2">Status</th>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left divide-y divide-gray-200 dark:divide-neutral-700">
+                    <thead class="bg-{{ $t['color'] }}-200 dark:bg-gray-800">
+                        <tr>
+                            <th class="px-4 py-2 cursor-pointer select-none"
+                                wire:click="{{ $t['sortMethod'] }}('created_at')">
+                                Timestamp
+                                @if($t['sortField'] === 'created_at') {{ $t['sortDir'] === 'asc' ? '↑' : '↓' }}
+                                @else <span class="opacity-30">↕</span> @endif
+                            </th>
+                            <th class="px-4 py-2 cursor-pointer select-none"
+                                wire:click="{{ $t['sortMethod'] }}('fill_level')">
+                                Fill Level
+                                @if($t['sortField'] === 'fill_level') {{ $t['sortDir'] === 'asc' ? '↑' : '↓' }}
+                                @else <span class="opacity-30">↕</span> @endif
+                            </th>
+                            <th class="px-4 py-2">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                        @forelse ($t['readings'] as $reading)
+                            @php $status = $this->determineStatus($reading->fill_level); @endphp
+                            <tr class="hover:bg-{{ $t['color'] }}-100 dark:hover:bg-gray-700 transition">
+                                <td class="px-4 py-2">{{ $reading->created_at->format('M d, Y H:i:s') }}</td>
+                                <td class="px-4 py-2">{{ $reading->fill_level }}%</td>
+                                <td class="px-4 py-2">
+                                    <span class="px-2 py-1 rounded text-sm
+                                        @if($status === 'FULL') bg-red-500 text-white
+                                        @elseif($status === 'NEAR FULL') bg-orange-400
+                                        @elseif($status === 'HALF') bg-yellow-400
+                                        @else bg-green-500 text-white
+                                        @endif">
+                                        {{ $status }}
+                                    </span>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @forelse (collect($recentReadings)->where('bin_type', 'non-bio') as $reading)
-                                <tr class="border-b dark:border-gray-700">
-                                    <td class="px-4 py-2">{{ $reading['timestamp'] }}</td>
-                                    <td class="px-4 py-2">{{ $reading['fill_level'] }}%</td>
-                                    <td class="px-4 py-2">{{ $reading['status'] }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="px-4 py-2 text-center text-gray-500">No non-biodegradable readings found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-4 py-4 text-center text-gray-500">No readings found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Pagination with first/last --}}
+            <div class="mt-4 flex items-center justify-between gap-2 text-sm">
+                <div class="flex gap-1">
+                    <a href="{{ $t['readings']->url(1) }}"
+                        class="px-2 py-1 rounded border {{ $t['readings']->onFirstPage() ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-100 dark:hover:bg-neutral-700' }}">
+                        «
+                    </a>
+                    @foreach ($t['readings']->links()->elements[0] ?? [] as $page => $url)
+                        <a href="{{ $url }}"
+                            class="px-2 py-1 rounded border {{ $t['readings']->currentPage() === $page ? 'bg-' . $t['color'] . '-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-neutral-700' }}">
+                            {{ $page }}
+                        </a>
+                    @endforeach
+                    <a href="{{ $t['readings']->url($t['readings']->lastPage()) }}"
+                        class="px-2 py-1 rounded border {{ !$t['readings']->hasMorePages() ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-100 dark:hover:bg-neutral-700' }}">
+                        »
+                    </a>
                 </div>
+                <span class="text-gray-500 dark:text-gray-400">
+                    {{ $t['readings']->firstItem() }}–{{ $t['readings']->lastItem() }} of {{ $t['readings']->total() }}
+                </span>
             </div>
         </div>
+        @endforeach
     </div>
 </div>
