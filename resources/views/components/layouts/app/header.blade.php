@@ -129,7 +129,7 @@
                         {{ __('User Management') }}
                     </flux:navlist.item>
                     <flux:navbar.item icon="home" :href="route('camera_preview')"
-                        :current="request()->routeIs('camera-preview)" wire:navigate>
+                        :current="request()->routeIs('camera-preview')" wire:navigate>
                         {{ __('Camera Preview') }}
                     </flux:navbar.item>
                 </flux:navlist.group>
