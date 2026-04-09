@@ -100,7 +100,12 @@ class PageController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        return view('admin.camera-preview');
+        return View::make('admin.camera-preview');
+    }
+
+    public function arm_actions()
+    {
+        return View::make('arm-actions');
     }
 
 }

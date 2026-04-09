@@ -116,6 +116,10 @@
                     :current="request()->routeIs('classifications')" wire:navigate>
                     {{ __('Classification') }}
                 </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('arm_actions')"
+                    :current="request()->routeIs('arm-actions')" wire:navigate>
+                    {{ __('Robotic Arm Actions') }}
+                </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
 

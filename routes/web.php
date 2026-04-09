@@ -32,6 +32,9 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/notifications', [PageController::class, 'notifications'])->name('notifications');
 });
+Route::middleware(['auth'])->group(function () {
+    Route::get('/arm-actions', [PageController::class, 'arm_actions'])->name('arm_actions');
+});
 Route::middleware(['auth'])->group(function() {
     Route::get('/admin/user-management', [PageController::class, 'user_management'])->name('user_management');
 });

@@ -16,6 +16,7 @@
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ Auth::check() && Auth::user()->role_id == 2 ? __('Admin Dashboard') : __('Dashboard') }}</flux:navlist.item>
                     <flux:navlist.item icon="home" :href="route('bin_monitoring')" :current="request()->routeIs('bin-monitoring')" wire:navigate>{{ __('Bin Monitoring')}}</flux:navlist.item>
                     <flux:navlist.item icon="home" :href="route('classifications')" :current="request()->routeIs('classifications')" wire:navigate>{{ __('Classification')}}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('arm_actions')" :current="request()->routeIs('arm-actions')" wire:navigate>{{ __('Robotic Arm Actions')}}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 
