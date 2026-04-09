@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\BinReading;
+use App\Observers\BinReadingObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 
@@ -24,5 +26,7 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
+
+        BinReading::observe(BinReadingObserver::class);
     }
 }

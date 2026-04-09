@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bin;
 use App\Models\BinReading;
+use App\Models\SystemThreshold;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,5 +24,24 @@ class BinController extends Controller
         ]);
 
         return response()->json(['status' => 'saved']);
+    }
+
+    public function binStatus()
+    {
+        $bins = Bin::with(['readings' => fn($q) => $q->latest()->limit(1)])->get();
+        $threshold = SystemThreshold::getValue('full_bin_threshold', 80);
+
+        $status = [];
+        foreach ($bins as $bin) {
+            $fill = $bin->readings->first()?->fill_level ?? $bin->last_fill_level;
+            $status[$bin->type] = [
+                'name'       => $bin->name,
+                'fill_level' => $fill,
+                'is_full'    => $fill !== null && $fill >= $threshold,
+                'threshold'  => $threshold,
+            ];
+        }
+
+        return response()->json($status);
     }
 }

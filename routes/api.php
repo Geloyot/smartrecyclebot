@@ -12,6 +12,8 @@ Route::get('/user', function (Request $request) {
 
 Route::match(['get', 'post'], '/bin-reading-read', [BinController::class, 'binReadingRead']);
 
+Route::get('/bin-status', [BinController::class, 'binStatus']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/waste-objects', [WasteObjectController::class, 'store']);
     Route::get('/waste-objects', [WasteObjectController::class, 'index']);
